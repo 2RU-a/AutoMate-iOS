@@ -16,6 +16,21 @@
 			path = AutoMate;
 			sourceTree = "<group>";
 		};
+		BAC8577D2F11AE1A009B343B /* UIKit */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = UIKit;
+			sourceTree = "<group>";
+		};
+		BAC8577E2F11AE1D009B343B /* UI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = UI;
+			sourceTree = "<group>";
+		};
+		BAC8577F2F11AE20009B343B /* Data */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Data;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +47,11 @@
 		BAC8575F2F118498009B343B = {
 			isa = PBXGroup;
 			children = (
+				BAC857812F11AE4C009B343B /* Resources */,
+				BAC857802F11AE25009B343B /* Core */,
+				BAC8577F2F11AE20009B343B /* Data */,
+				BAC8577E2F11AE1D009B343B /* UI */,
+				BAC8577D2F11AE1A009B343B /* UIKit */,
 				BAC8576A2F118498009B343B /* AutoMate */,
 				BAC857692F118498009B343B /* Products */,
 			);
@@ -43,6 +63,20 @@
 				BAC857682F118498009B343B /* AutoMate.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BAC857802F11AE25009B343B /* Core */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		BAC857812F11AE4C009B343B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -62,6 +96,9 @@
 			);
 			fileSystemSynchronizedGroups = (
 				BAC8576A2F118498009B343B /* AutoMate */,
+				BAC8577D2F11AE1A009B343B /* UIKit */,
+				BAC8577E2F11AE1D009B343B /* UI */,
+				BAC8577F2F11AE20009B343B /* Data */,
 			);
 			name = AutoMate;
 			packageProductDependencies = (
