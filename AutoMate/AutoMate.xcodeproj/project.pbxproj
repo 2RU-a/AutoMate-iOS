@@ -6,29 +6,39 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BA53A7FF2F13169D00FA871E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BA53A7FE2F13169D00FA871E /* FirebaseAuth */; };
+		BA53A8012F13169D00FA871E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BA53A8002F13169D00FA871E /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		BAC857682F118498009B343B /* AutoMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		BA22A80D2F13236800DE74B3 /* Features */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Features;
+			sourceTree = "<group>";
+		};
+		BA22A81C2F1323D400DE74B3 /* Models */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Models;
+			sourceTree = "<group>";
+		};
+		BA22A81D2F1323E800DE74B3 /* Resources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BA22A81E2F1323FD00DE74B3 /* Core */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Core;
+			sourceTree = "<group>";
+		};
 		BAC8576A2F118498009B343B /* AutoMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = AutoMate;
-			sourceTree = "<group>";
-		};
-		BAC8577D2F11AE1A009B343B /* UIKit */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = UIKit;
-			sourceTree = "<group>";
-		};
-		BAC8577E2F11AE1D009B343B /* UI */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = UI;
-			sourceTree = "<group>";
-		};
-		BAC8577F2F11AE20009B343B /* Data */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Data;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -38,6 +48,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA53A7FF2F13169D00FA871E /* FirebaseAuth in Frameworks */,
+				BA53A8012F13169D00FA871E /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,11 +59,10 @@
 		BAC8575F2F118498009B343B = {
 			isa = PBXGroup;
 			children = (
-				BAC857812F11AE4C009B343B /* Resources */,
-				BAC857802F11AE25009B343B /* Core */,
-				BAC8577F2F11AE20009B343B /* Data */,
-				BAC8577E2F11AE1D009B343B /* UI */,
-				BAC8577D2F11AE1A009B343B /* UIKit */,
+				BA22A81E2F1323FD00DE74B3 /* Core */,
+				BA22A81D2F1323E800DE74B3 /* Resources */,
+				BA22A81C2F1323D400DE74B3 /* Models */,
+				BA22A80D2F13236800DE74B3 /* Features */,
 				BAC8576A2F118498009B343B /* AutoMate */,
 				BAC857692F118498009B343B /* Products */,
 			);
@@ -63,20 +74,6 @@
 				BAC857682F118498009B343B /* AutoMate.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		BAC857802F11AE25009B343B /* Core */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Core;
-			sourceTree = "<group>";
-		};
-		BAC857812F11AE4C009B343B /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -95,13 +92,16 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				BA22A80D2F13236800DE74B3 /* Features */,
+				BA22A81C2F1323D400DE74B3 /* Models */,
+				BA22A81D2F1323E800DE74B3 /* Resources */,
+				BA22A81E2F1323FD00DE74B3 /* Core */,
 				BAC8576A2F118498009B343B /* AutoMate */,
-				BAC8577D2F11AE1A009B343B /* UIKit */,
-				BAC8577E2F11AE1D009B343B /* UI */,
-				BAC8577F2F11AE20009B343B /* Data */,
 			);
 			name = AutoMate;
 			packageProductDependencies = (
+				BA53A7FE2F13169D00FA871E /* FirebaseAuth */,
+				BA53A8002F13169D00FA871E /* FirebaseFirestore */,
 			);
 			productName = AutoMate;
 			productReference = BAC857682F118498009B343B /* AutoMate.app */;
@@ -131,6 +131,9 @@
 			);
 			mainGroup = BAC8575F2F118498009B343B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BA53A7FD2F13169D00FA871E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BAC857692F118498009B343B /* Products */;
 			projectDirPath = "";
@@ -365,6 +368,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BA53A7FD2F13169D00FA871E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BA53A7FE2F13169D00FA871E /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA53A7FD2F13169D00FA871E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		BA53A8002F13169D00FA871E /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA53A7FD2F13169D00FA871E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BAC857602F118498009B343B /* Project object */;
 }
