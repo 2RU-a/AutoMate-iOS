@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor // ეს უზრუნველყოფს, რომ UI განახლებები მოხდეს მთავარ ნაკადში
 class MyCarViewModel: ObservableObject {
@@ -21,9 +22,10 @@ class MyCarViewModel: ObservableObject {
     
     // MARK: - Initializer (Dependency Injection)
     // default მნიშვნელობად აქვს MockCarService, რაც ამარტივებს პრევიუს
-    init(carService: CarServiceProtocol = MockCarService()) {
-        self.carService = carService
-    }
+    init(carService: CarServiceProtocol? = nil) {
+            // თუ carService არ გადმოეცა, ვქმნით მას "შიგნით", რაც უსაფრთხოა
+            self.carService = carService ?? MockCarService()
+        }
     
     // MARK: - Methods
     
@@ -43,9 +45,23 @@ class MyCarViewModel: ObservableObject {
         isLoading = false
     }
     
-    // ფუნქცია მომავლისთვის: მანქანის წაშლა სიიდან
-    func deleteCar(at indexSet: IndexSet) {
-        // აქ ჯერ ლოკალურად წავშლით, შემდეგ კი სერვისს დავამატებთ წაშლის ფუნქციას
-        cars.remove(atOffsets: indexSet)
+    // MARK: - Car Deletion Logic
+    
+    func deleteCar(_ car: Car) async {
+        isLoading = true
+        
+        do {
+            // 1. ვეუბნებით სერვერს/ბაზას რომ წაშალოს
+            try await carService.deleteCar(id: car.id)
+            
+            // 2. თუ სერვერმა იმუშავა, ვშლით ლოკალური სიიდანაც
+            if let index = cars.firstIndex(where: { $0.id == car.id }) {
+                cars.remove(at: index)
+            }
+        } catch {
+            self.errorMessage = "წაშლა ვერ მოხერხდა: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
     }
 }

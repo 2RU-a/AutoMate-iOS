@@ -33,4 +33,9 @@ class MockCarService: CarServiceProtocol {
         try? await Task.sleep(nanoseconds: UInt64(0.5) * 1_000_000_000)
         print("Mock: მანქანა დაემატა - \(car.brand)")
     }
+    
+    func deleteCar(id: String) async throws {
+        try? await Task.sleep(for: .seconds(0.5))
+        print("Mock: მანქანა ID: \(id) წაიშალა.")
+    }
 }
