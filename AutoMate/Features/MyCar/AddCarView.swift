@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AddCarView: View {
-    @Environment(\.dismiss) var dismiss // რომ დავხუროთ ფანჯარა
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
         NavigationStack {

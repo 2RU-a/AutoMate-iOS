@@ -14,7 +14,7 @@ struct CarInfoCard: View {
     // მანქანის მონაცემების JSON-ად ქცევა QR-ისთვის
     var carDataString: String {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted // ლამაზად რომ გამოჩნდეს სკანირებისას
+        encoder.outputFormatting = .prettyPrinted
         if let data = try? encoder.encode(car),
            let jsonString = String(data: data, encoding: .utf8) {
             return jsonString
@@ -70,16 +70,14 @@ struct CarInfoCard: View {
             
             // მარჯვენა მხარე: გენერირებული QR კოდი
             VStack {
-                // ვიყენებთ ჩვენს Helper-ს
                 Image(uiImage: QRCodeGenerator.generate(from: carDataString))
                     .resizable()
-                    .interpolation(.none) // პიქსელები არ გაწელოს (მნიშვნელოვანია QR-ისთვის)
+                    .interpolation(.none)
                     .scaledToFit()
                     .frame(width: 80, height: 80)
-                    .padding(6) // თეთრი ჩარჩო რომ ჰქონდეს
+                    .padding(6)
                     .background(Color.white)
                     .cornerRadius(12)
-                    // ჟესტი, რომელიც გადაფარავს NavigationLink-ს
                     .onTapGesture {
                         showLargeQR = true
                     }
@@ -99,11 +97,9 @@ struct CarInfoCard: View {
         .cornerRadius(20)
         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
         
-        // 📢 Sheet - დიდი QR კოდის საჩვენებლად
         .sheet(isPresented: $showLargeQR) {
             QRCodeSheetView(car: car, qrData: carDataString)
-                .presentationDetents([.medium]) // ნახევარზე ამოვიდეს
-                .presentationDragIndicator(.visible)
+                .presentationDetents([.fraction(0.65)])                .presentationDragIndicator(.visible)
         }
     }
 }
@@ -136,7 +132,7 @@ struct QRCodeSheetView: View {
             
             Text(car.vin)
                 .monospaced()
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
             
             Spacer()

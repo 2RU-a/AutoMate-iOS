@@ -46,11 +46,11 @@ struct MyCarView: View {
                                         }
                                         
                                         // აქ სხვა ღილაკების დამატებაც შეიძლება (მაგ: რედაქტირება)
-                                        Button {
-                                            // Edit Logic
-                                        } label: {
-                                            Label("რედაქტირება", systemImage: "pencil")
-                                        }
+//                                        Button {
+//                                            // Edit Logic
+//                                        } label: {
+//                                            Label("რედაქტირება", systemImage: "pencil")
+//                                        }
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
