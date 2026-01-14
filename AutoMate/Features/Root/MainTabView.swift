@@ -15,9 +15,9 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             
-            // 🏠 Home Tab
+            // Home Tab
             NavigationStack {
-                HomeView() // ჯერ ცარიელი View
+                HomeView()
             }
             .tabItem {
                 Label("მთავარი", systemImage: "house")
@@ -33,16 +33,16 @@ struct MainTabView: View {
             }
             .tag(Tab.browse)
             
-            // 🚘 My Car (Garage) Tab
+            // My Car Tab
             NavigationStack {
                 MyCarView()
             }
             .tabItem {
                 Label("გარაჟი", systemImage: "car.fill")
             }
-            .tag(Tab.garage)
+            .tag(Tab.mycar)
             
-            // 🛒 Cart Tab
+            //Cart Tab
             NavigationStack {
                 CartView()
             }
@@ -52,7 +52,7 @@ struct MainTabView: View {
             }
             .tag(Tab.cart)
             
-            // 👤 Profile Tab
+            // Profile Tab
             NavigationStack {
                 ProfileView()
             }
@@ -67,8 +67,8 @@ struct MainTabView: View {
 }
 
 // ტაბების ენამი (Type-safe selection-ისთვის)
-enum Tab {
-    case home, browse, garage, cart, profile
+enum Tab: String, CaseIterable {
+    case home, browse, mycar, cart, profile
 }
 
 #Preview {
