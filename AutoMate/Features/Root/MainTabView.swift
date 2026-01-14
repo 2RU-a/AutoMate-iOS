@@ -1,0 +1,76 @@
+//
+//  MainTabView.swift
+//  AutoMate
+//
+//  Created by oto rurua on 14.01.26.
+//
+
+import Foundation
+import SwiftUI
+
+struct MainTabView: View {
+    // არჩეული ტაბის შესანახად
+    @State private var selectedTab: Tab = .home
+    
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            
+            // 🏠 Home Tab
+            NavigationStack {
+                HomeView() // ჯერ ცარიელი View
+            }
+            .tabItem {
+                Label("მთავარი", systemImage: "house")
+            }
+            .tag(Tab.home)
+            
+            // 🔍 Browse / Favorites Tab
+            NavigationStack {
+                FavoritesView() // ან BrowseView
+            }
+            .tabItem {
+                Label("ძებნა", systemImage: "magnifyingglass")
+            }
+            .tag(Tab.browse)
+            
+            // 🚘 My Car (Garage) Tab
+            NavigationStack {
+                MyCarView()
+            }
+            .tabItem {
+                Label("გარაჟი", systemImage: "car.fill")
+            }
+            .tag(Tab.garage)
+            
+            // 🛒 Cart Tab
+            NavigationStack {
+                CartView()
+            }
+            .badge(1) // მაგალითისთვის: კალათში 1 ნივთია
+            .tabItem {
+                Label("კალათა", systemImage: "cart")
+            }
+            .tag(Tab.cart)
+            
+            // 👤 Profile Tab
+            NavigationStack {
+                ProfileView()
+            }
+            .tabItem {
+                Label("პროფილი", systemImage: "person.circle")
+            }
+            .tag(Tab.profile)
+        }
+        // ტაბების ფერის კონფიგურაცია (Theme-დან)
+        .tint(Color.blue) // აქ გამოიყენე შენი DesignSystem.Colors.primary
+    }
+}
+
+// ტაბების ენამი (Type-safe selection-ისთვის)
+enum Tab {
+    case home, browse, garage, cart, profile
+}
+
+#Preview {
+    MainTabView()
+}
