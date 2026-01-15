@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeHeaderView: View {
     // მომავალში აქ User-ის სახელი შემოვა
-    var userName: String = "მძღოლო"
+    var userName: String = "შუმახერ"
     
     var body: some View {
         HStack {
@@ -19,10 +19,10 @@ struct HomeHeaderView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                Text("რას ეძებ დღეს?")
-                    .font(.title2)
-                    .bold()
-                    .foregroundColor(.primary)
+//                Text("რას ეძებ დღეს?")
+//                    .font(.title2)
+//                    .bold()
+//                    .foregroundColor(.primary)
             }
             
             Spacer()
@@ -31,7 +31,7 @@ struct HomeHeaderView: View {
             Button {
                 // Action
             } label: {
-                Image(systemName: "bell.badge") // წერტილიანი ზარი
+                Image(systemName: "bell.badge")
                     .font(.title3)
                     .foregroundColor(.primary)
                     .padding(10)
@@ -41,7 +41,7 @@ struct HomeHeaderView: View {
         }
         .padding(.horizontal)
         .padding(.bottom, 10)
-        .background(Color(.systemBackground)) // ფონი აუცილებელია, რომ სქროლისას არ გამჭვირვალედეს
+        .background(Color(.systemBackground))
     }
 }
 

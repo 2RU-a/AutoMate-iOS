@@ -30,4 +30,13 @@ final class MockHomeService: HomeServiceProtocol, Sendable {
             Category(id: "6", name: "აქსესუარები", iconName: "steeringwheel")
         ]
     }
+    
+    func fetchProducts(for categoryId: String) async throws -> [Product] {
+        try? await Task.sleep(for: .seconds(0.5))
+        
+        // მაგალითისთვის მხოლოდ "ზეთების" (id: "5") პროდუქტები
+        return [
+            Product(id: "101", name: "Edge 5W-30", brand: "Castrol", description: "სინთეტიკური", price: 145.00, imageName: "drop.fill", categoryId: "5")
+        ]
+    }
 }

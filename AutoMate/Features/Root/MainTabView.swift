@@ -24,12 +24,12 @@ struct MainTabView: View {
             }
             .tag(Tab.home)
             
-            // 🔍 Browse / Favorites Tab
+            //Favorites Tab
             NavigationStack {
                 FavoritesView() // ან BrowseView
             }
             .tabItem {
-                Label("ძებნა", systemImage: "magnifyingglass")
+                Label("ფავორიტი", systemImage: "heart.fill")
             }
             .tag(Tab.browse)
             
@@ -38,7 +38,7 @@ struct MainTabView: View {
                 MyCarView()
             }
             .tabItem {
-                Label("გარაჟი", systemImage: "car.fill")
+                Label("ჩემი მანქანა", systemImage: "car.fill")
             }
             .tag(Tab.mycar)
             
