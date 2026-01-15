@@ -9,13 +9,13 @@ import Foundation
 import SwiftUI
 
 struct MainTabView: View {
-    // არჩეული ტაბის შესანახად
+    // 1. დავაკავშიროთ CartManager-თან, რომ ბეიჯი დინამიური იყოს
+    @StateObject private var cartManager = CartManager.shared
     @State private var selectedTab: Tab = .home
     
     var body: some View {
         TabView(selection: $selectedTab) {
             
-            // Home Tab
             NavigationStack {
                 HomeView()
             }
@@ -24,16 +24,14 @@ struct MainTabView: View {
             }
             .tag(Tab.home)
             
-            //Favorites Tab
             NavigationStack {
-                FavoritesView() // ან BrowseView
+                FavoritesView()
             }
             .tabItem {
                 Label("ფავორიტი", systemImage: "heart.fill")
             }
-            .tag(Tab.browse)
+            .tag(Tab.favorites)
             
-            // My Car Tab
             NavigationStack {
                 MyCarView()
             }
@@ -42,17 +40,16 @@ struct MainTabView: View {
             }
             .tag(Tab.mycar)
             
-            //Cart Tab
             NavigationStack {
                 CartView()
             }
-            .badge(1) // მაგალითისთვის: კალათში 1 ნივთია
+
+            .badge(cartManager.items.count > 0 ? cartManager.items.count : 0)
             .tabItem {
                 Label("კალათა", systemImage: "cart")
             }
             .tag(Tab.cart)
-            
-            // Profile Tab
+
             NavigationStack {
                 ProfileView()
             }
@@ -61,16 +58,10 @@ struct MainTabView: View {
             }
             .tag(Tab.profile)
         }
-        // ტაბების ფერის კონფიგურაცია (Theme-დან)
-        .tint(Color.blue) // აქ გამოიყენე შენი DesignSystem.Colors.primary
+        .tint(Color.blue)
     }
 }
 
-// ტაბების ენამი (Type-safe selection-ისთვის)
 enum Tab: String, CaseIterable {
-    case home, browse, mycar, cart, profile
-}
-
-#Preview {
-    MainTabView()
+    case home, favorites, mycar, cart, profile
 }

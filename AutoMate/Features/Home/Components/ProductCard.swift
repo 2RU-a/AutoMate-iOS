@@ -10,6 +10,9 @@ import SwiftUI
 struct ProductCard: View {
     let product: Product
     
+    // 1. დავაკავშიროთ ფავორიტების მენეჯერთან
+    @StateObject private var favoritesManager = FavoritesManager.shared
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             // სურათის სექცია
@@ -22,14 +25,19 @@ struct ProductCard: View {
                     .font(.system(size: 50))
                     .foregroundColor(.gray)
                 
+                // 2. გულის ღილაკი დინამიური ლოგიკით
                 Button {
-                    // Favorite action
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        favoritesManager.toggleFavorite(product)
+                    }
                 } label: {
-                    Image(systemName: "heart")
+                    Image(systemName: favoritesManager.isFavorite(product) ? "heart.fill" : "heart")
+                        .font(.system(size: 18))
+                        .foregroundColor(favoritesManager.isFavorite(product) ? .red : .gray)
                         .padding(8)
                         .background(.white)
                         .clipShape(Circle())
-                        .shadow(radius: 1)
+                        .shadow(color: .black.opacity(0.1), radius: 2)
                 }
                 .padding(8)
             }
@@ -59,4 +67,18 @@ struct ProductCard: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 5)
     }
+}
+
+#Preview {
+    ProductCard(product: Product(
+        id: "1",
+        name: "Edge 5W-30",
+        brand: "Castrol",
+        description: "Premium oil",
+        price: 145.0,
+        imageName: "drop.fill",
+        categoryId: "5"
+    ))
+    .frame(width: 170)
+    .padding()
 }
