@@ -10,6 +10,9 @@ import SwiftUI
 struct ProductDetailView: View {
     let product: Product
     
+    // 1. დავაკავშიროთ CartManager-თან
+    @StateObject private var cartManager = CartManager.shared
+    
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -64,7 +67,10 @@ struct ProductDetailView: View {
             VStack {
                 Divider()
                 Button {
-                    // კალათაში დამატების ლოგიკა
+                    // 2. გამოვიძახოთ დამატების ფუნქცია
+                    withAnimation {
+                        cartManager.addToCart(product: product)
+                    }
                 } label: {
                     HStack {
                         Image(systemName: "cart.badge.plus")
@@ -73,6 +79,7 @@ struct ProductDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
+                    // 3. ვიზუალური ეფექტი: თუ უკვე კალათაშია, ფერი შევუცვალოთ (სურვილისამებრ)
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(12)
