@@ -6,12 +6,13 @@
 //
 
 import Foundation
-import SwiftUI
 import Combine
+
 
 @MainActor
 class CategoryProductsViewModel: ObservableObject {
     @Published var products: [Product] = []
+    @Published var availableBrands: [String] = []
     @Published var isLoading: Bool = false
     
     private let service = MockHomeService()
@@ -24,10 +25,12 @@ class CategoryProductsViewModel: ObservableObject {
     func loadProducts() async {
         isLoading = true
         do {
-            // ვიძახებთ Mock სერვისიდან ჩვენს დამატებულ ფუნქციას
-            self.products = try await service.fetchProducts(for: categoryId)
+            let fetched = try await service.fetchProducts(for: categoryId)
+            self.products = fetched
+            // ბრენდების დინამიური ამოღება
+            self.availableBrands = Array(Set(fetched.map { $0.brand })).sorted()
         } catch {
-            print("Error loading products: \(error)")
+            print(error)
         }
         isLoading = false
     }

@@ -10,7 +10,11 @@ import SwiftUI
 struct CategoryProductsView: View {
     let category: Category
     @StateObject private var viewModel: CategoryProductsViewModel
+    
+    // MARK: - State Properties
     @State private var searchText = ""
+    @State private var showFilters = false
+    @State private var filterOptions = FilterOptions()
     
     // ინიციალიზატორი
     init(category: Category) {
@@ -25,7 +29,12 @@ struct CategoryProductsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 🏷 ფილტრების ჰორიზონტალური ზოლი
+            // 1. მუდმივი საძიებო ველი
+            customSearchBar
+                .padding(.vertical, 10)
+                .background(Color(.systemBackground))
+            
+            // 2. ფილტრების ჰორიზონტალური ზოლი
             filterSection
             
             ScrollView {
@@ -36,10 +45,8 @@ struct CategoryProductsView: View {
                     } else if filteredProducts.isEmpty {
                         emptyStateView
                     } else {
-                        // 🛒 პროდუქტების გრიდი
                         LazyVGrid(columns: columns, spacing: 20) {
                             ForEach(filteredProducts) { product in
-                                // გადასვლა დეტალურ გვერდზე
                                 NavigationLink(destination: ProductDetailView(product: product)) {
                                     ProductCard(product: product)
                                 }
@@ -54,7 +61,21 @@ struct CategoryProductsView: View {
         .navigationTitle(category.name)
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
-        .searchable(text: $searchText, prompt: "მოძებნე \(category.name)...")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showFilters.toggle()
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .symbolVariant(!filterOptions.selectedBrands.isEmpty ? .fill : .none)
+                }
+            }
+        }
+        .sheet(isPresented: $showFilters) {
+            FilterView(options: $filterOptions,
+                       categoryName: category.name,
+                       categoryId: category.id)
+        }
         .task {
             await viewModel.loadProducts()
         }
@@ -62,18 +83,46 @@ struct CategoryProductsView: View {
     
     // MARK: - Components
     
+    private var customSearchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.gray)
+            TextField("მოძებნე \(category.name)...", text: $searchText)
+                .autocorrectionDisabled()
+        }
+        .padding(10)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(10)
+        .padding(.horizontal)
+    }
+    
     private var filterSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                FilterChip(title: "ბრენდი", icon: "chevron.down")
+
+                Menu {
+                    ForEach(viewModel.availableBrands, id: \.self) { brand in                       Button {
+                            toggleBrand(brand)
+                        } label: {
+                            HStack {
+                                Text(brand)
+                                if filterOptions.selectedBrands.contains(brand) {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    FilterChip(
+                        title: filterOptions.selectedBrands.isEmpty ? "ბრენდი" : "ბრენდი (\(filterOptions.selectedBrands.count))",
+                        icon: "chevron.down"
+                    )
+                }
                 
-                // დინამიური ფილტრები კატეგორიის მიხედვით
                 if category.id == "5" { // ზეთები
-                    FilterChip(title: "სიბლანტე", icon: "drop.fill")
-                    FilterChip(title: "მოცულობა", icon: "litres.sign")
+                    FilterChip(title: filterOptions.viscosity ?? "სიბლანტე", icon: "drop.fill")
                 } else if category.id == "4" { // საბურავები
                     FilterChip(title: "სეზონი", icon: "sun.max.fill")
-                    FilterChip(title: "ზომა", icon: "ruler.fill")
                 }
             }
             .padding(.horizontal)
@@ -87,7 +136,7 @@ struct CategoryProductsView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 50))
                 .foregroundColor(.gray)
-            Text(searchText.isEmpty ? "ამ კატეგორიაში პროდუქტები ჯერ არ არის" : "პროდუქტი ვერ მოიძებნა")
+            Text(searchText.isEmpty ? "პროდუქტები ჯერ არ არის" : "ვერ მოიძებნა")
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 300)
@@ -95,19 +144,39 @@ struct CategoryProductsView: View {
     
     // MARK: - Logic
     
-    private var filteredProducts: [Product] {
-        if searchText.isEmpty {
-            return viewModel.products
+    private func toggleBrand(_ brand: String) {
+        if filterOptions.selectedBrands.contains(brand) {
+            filterOptions.selectedBrands.remove(brand)
         } else {
-            return viewModel.products.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.brand.localizedCaseInsensitiveContains(searchText)
+            filterOptions.selectedBrands.insert(brand)
+        }
+    }
+    
+    private var filteredProducts: [Product] {
+        viewModel.products.filter { product in
+            let matchesSearch = searchText.isEmpty ||
+                               product.name.localizedCaseInsensitiveContains(searchText) ||
+                               product.brand.localizedCaseInsensitiveContains(searchText)
+            
+            let matchesBrand = filterOptions.selectedBrands.isEmpty ||
+                              filterOptions.selectedBrands.contains(product.brand)
+            
+            let matchesMinPrice = filterOptions.minPrice == nil || product.price >= (filterOptions.minPrice ?? 0)
+            let matchesMaxPrice = filterOptions.maxPrice == nil || product.price <= (filterOptions.maxPrice ?? Double.infinity)
+            
+            return matchesSearch && matchesBrand && matchesMinPrice && matchesMaxPrice
+        }
+        .sorted { p1, p2 in
+            switch filterOptions.sortBy {
+            case .priceLowHigh: return p1.price < p2.price
+            case .priceHighLow: return p1.price > p2.price
+            case .newest: return p1.id > p2.id
             }
         }
     }
 }
 
-// MARK: - Filter Chip Component
+// ✅ აუცილებელია ეს კომპონენტი იყოს ფაილში, რომ 'Cannot find in scope' შეცდომა არ მოგცეს
 struct FilterChip: View {
     let title: String
     let icon: String

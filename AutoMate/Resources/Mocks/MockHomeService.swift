@@ -6,21 +6,18 @@
 //
 
 import Foundation
-import SwiftUI
 
 final class MockHomeService: HomeServiceProtocol, Sendable {
-    
     func fetchOffers() async throws -> [Offer] {
-        try? await Task.sleep(nanoseconds: UInt64(0.5 * 1_000_000_000))
+        try? await Task.sleep(for: .seconds(0.3))
         return [
-            Offer(id: "1", title: "ზამთრის საბურავები", subtitle: "შეიძინე 20% ფასდაკლებით", colorCode: "blue"),
-            Offer(id: "2", title: "უფასო დიაგნოსტიკა", subtitle: "Tegeta Motors-ისგან", colorCode: "orange"),
-            Offer(id: "3", title: "ზეთის შეცვლა", subtitle: "Castrol + ფილტრი საჩუქრად", colorCode: "green")
+            Offer(id: "1", title: "ზამთრის აქცია", subtitle: "20% ფასდაკლება", colorCode: "blue"),
+            Offer(id: "2", title: "უფასო დიაგნოსტიკა", subtitle: "Tegeta-სგან", colorCode: "orange")
         ]
     }
     
     func fetchCategories() async throws -> [Category] {
-        try? await Task.sleep(nanoseconds: UInt64(0.5 * 1_000_000_000))
+        try? await Task.sleep(for: .seconds(0.3))
         return [
             Category(id: "1", name: "ძრავი", iconName: "engine.combustion"),
             Category(id: "2", name: "სავალი ნაწილი", iconName: "car.side.fill"),
@@ -32,11 +29,10 @@ final class MockHomeService: HomeServiceProtocol, Sendable {
     }
     
     func fetchProducts(for categoryId: String) async throws -> [Product] {
-        try? await Task.sleep(for: .seconds(0.5))
-        
-        // მაგალითისთვის მხოლოდ "ზეთების" (id: "5") პროდუქტები
-        return [
-            Product(id: "101", name: "Edge 5W-30", brand: "Castrol", description: "სინთეტიკური", price: 145.00, imageName: "drop.fill", categoryId: "5")
-        ]
+        return Product.sampleData.filter { $0.categoryId == categoryId }
+    }
+    
+    func fetchAllProducts() async throws -> [Product] {
+        return Product.sampleData
     }
 }
