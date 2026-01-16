@@ -32,20 +32,32 @@ struct ProfileView: View {
                     
                     Group {
                         ProfileInfoRow(label: "იმეილი", value: "oto.rurua@example.com")
-                        ProfileInfoRow(label: "მისამართი", value: "თბილისი, ჭავჭავაძის გამზ. 1")
+                        
+                        // ✅ მისამართის მართვაზე გადასვლა
+                        NavigationLink(destination: AddressManagementView()) {
+                            ProfileInfoRow(label: "მისამართი", value: "თბილისი, ჭავჭავაძის გამზ. 1")
+                        }
                     }
                 }
                 .padding(.vertical, 5)
             }
             
-            // 2. My Car Management
-            Section(header: Text("ჩემი ავტოფარეხი")) {
+            // 2. ჩემი აქტივობა
+            Section(header: Text("ჩემი აქტივობა")) {
+                NavigationLink(destination: OrdersHistoryView()) {
+                    ProfileMenuRow(icon: "bag.fill", title: "შეკვეთები", color: .orange)
+                }
+                
                 NavigationLink(destination: MyCarView()) {
                     ProfileMenuRow(icon: "car.fill", title: "მანქანების მართვა", color: .blue)
                 }
+                
+                NavigationLink(destination: FavoritesView()) {
+                    ProfileMenuRow(icon: "heart.fill", title: "სასურველი ნივთები", color: .red)
+                }
             }
             
-            // 3. App Settings (რაც შეიძლება დაგჭირდეს)
+            // 3. App Settings
             Section(header: Text("აპლიკაციის პარამეტრები")) {
                 Toggle(isOn: .constant(true)) {
                     HStack {
@@ -82,6 +94,7 @@ struct ProfileView: View {
         .navigationTitle("პროფილი")
     }
 }
+
 // MARK: - Profile Menu Row Component
 struct ProfileMenuRow: View {
     let icon: String
@@ -121,6 +134,7 @@ struct ProfileInfoRow: View {
             Spacer()
             Text(value)
                 .font(.footnote)
+                .lineLimit(1)
         }
     }
 }

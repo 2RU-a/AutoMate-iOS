@@ -14,6 +14,7 @@ class CartManager: ObservableObject {
     static let shared = CartManager()
     
     @Published var items: [Product] = []
+    @Published var orderHistory: [Order] = []
     
     // ჯამური ფასი
     var totalPrice: Double {
@@ -33,5 +34,17 @@ class CartManager: ObservableObject {
     // გასუფთავება
     func clearCart() {
         items = []
+    }
+    
+    func checkout() {
+        let newOrder = Order(
+            id: UUID().uuidString.prefix(8).uppercased(),
+            date: Date(),
+            items: items,
+            totalPrice: totalPrice,
+            status: .pending
+        )
+        orderHistory.insert(newOrder, at: 0) // ახალი შეკვეთა თავში
+        clearCart()
     }
 }

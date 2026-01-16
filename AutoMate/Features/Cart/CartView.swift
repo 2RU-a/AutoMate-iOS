@@ -11,30 +11,29 @@ struct CartView: View {
     @StateObject private var cartManager = CartManager.shared
     
     var body: some View {
-        NavigationView {
-            VStack {
-                if cartManager.items.isEmpty {
-                    emptyCartView
-                } else {
-                    List {
-                        ForEach(cartManager.items) { product in
-                            CartItemRow(product: product)
-                        }
-                        .onDelete(perform: deleteItems) // Swipe-to-delete ფუნქცია
+        VStack {
+            if cartManager.items.isEmpty {
+                emptyCartView
+            } else {
+                List {
+                    ForEach(cartManager.items) { product in
+                        CartItemRow(product: product)
                     }
-                    .listStyle(PlainListStyle())
-                    
-                    checkoutSection
+                    .onDelete(perform: deleteItems)
                 }
+                .listStyle(PlainListStyle())
+                
+                checkoutSection
             }
-            .navigationTitle("კალათა")
         }
+        .navigationTitle("კალათა")
     }
     
     // MARK: - Components
     
     private var emptyCartView: some View {
         VStack(spacing: 20) {
+            Spacer()
             Image(systemName: "cart.badge.minus")
                 .font(.system(size: 80))
                 .foregroundColor(.gray.opacity(0.5))
@@ -46,6 +45,7 @@ struct CartView: View {
             Text("დაამატე პროდუქტები მთავარი გვერდიდან")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+            Spacer()
         }
     }
     
@@ -64,9 +64,8 @@ struct CartView: View {
             }
             .padding(.horizontal)
             
-            Button {
-                // შეკვეთის გაფორმების ლოგიკა
-            } label: {
+            // ✅ შეცვლილია NavigationLink-ით
+            NavigationLink(destination: CheckoutView()) {
                 Text("შეკვეთის გაფორმება")
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity)
