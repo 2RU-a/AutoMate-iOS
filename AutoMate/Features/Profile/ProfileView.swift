@@ -33,7 +33,7 @@ struct ProfileView: View {
                     Group {
                         ProfileInfoRow(label: "იმეილი", value: "oto.rurua@example.com")
                         
-                        // ✅ მისამართის მართვაზე გადასვლა
+                        // მისამართის მართვაზე გადასვლა
                         NavigationLink(destination: AddressManagementView()) {
                             ProfileInfoRow(label: "მისამართი", value: "თბილისი, ჭავჭავაძის გამზ. 1")
                         }
@@ -48,7 +48,7 @@ struct ProfileView: View {
                     ProfileMenuRow(icon: "bag.fill", title: "შეკვეთები", color: .orange)
                 }
                 
-                NavigationLink(destination: MyCarView()) {
+                NavigationLink(destination: VehicleManagementView()) {
                     ProfileMenuRow(icon: "car.fill", title: "მანქანების მართვა", color: .blue)
                 }
                 
@@ -56,7 +56,6 @@ struct ProfileView: View {
                     ProfileMenuRow(icon: "heart.fill", title: "სასურველი ნივთები", color: .red)
                 }
             }
-            
             // 3. App Settings
             Section(header: Text("აპლიკაციის პარამეტრები")) {
                 Toggle(isOn: .constant(true)) {

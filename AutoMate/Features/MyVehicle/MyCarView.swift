@@ -9,51 +9,129 @@ import Foundation
 import SwiftUI
 import CoreImage.CIFilterBuiltins
 
-
 struct MyCarView: View {
     @StateObject private var vehicleManager = VehicleManager.shared
     
     var body: some View {
         NavigationStack {
-            // ✅ ScrollView-ს ვამატებთ ჰორიზონტალურ სქროლს და Snapping ქცევას
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) { // ქარდებს შორის მცირე დაშორება
-                    if vehicleManager.cars.isEmpty {
-                        emptyState
-                            .containerRelativeFrame(.horizontal)
-                    } else {
-                        ForEach(vehicleManager.cars) { car in
-                            CarDashboardCard(car: car)
-                                // ✅ ეს ხაზი აცენტრებს ქარდს და ტოვებს გვერდებზე სივრცეს
-                                .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 30)
-                        }
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 25) {
+                    
+                    // 1. ზედა სექცია: ავტომობილების კარუსელი
+                    headerCarouselSection
+                    
+                    // 2. სერვისის სექციები
+                    VStack(spacing: 25) {
+                        serviceQuickActionSection
+                        
+                        maintenanceDueSection
+                        
+                        upcomingServicesSection
                     }
+                    .padding(.horizontal)
                 }
-                .scrollTargetLayout()
+                .padding(.vertical)
             }
-            .scrollTargetBehavior(.viewAligned)
-            .contentMargins(.horizontal, 20, for: .scrollContent) // ✅ ამატებს სივრცეს ეკრანის კიდეებთან
+            .navigationTitle("ჩემი ავტომობილი")
+            .background(Color(.systemGroupedBackground))
         }
     }
     
+    // MARK: - Header Carousel Component
+    private var headerCarouselSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                if vehicleManager.cars.isEmpty {
+                    emptyState
+                        .containerRelativeFrame(.horizontal)
+                } else {
+                    ForEach(vehicleManager.cars) { car in
+                        CarDashboardCard(car: car)
+                            .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 30)
+                    }
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .contentMargins(.horizontal, 20, for: .scrollContent)
+    }
+
+    // MARK: - Service UI Components
+    private var serviceQuickActionSection: some View {
+        Button(action: { /* Booking Action */ }) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("სერვისის დაჯავშნა")
+                        .font(.headline)
+                    Text("მოძებნე უახლოესი სერვის ცენტრი")
+                        .font(.subheadline).opacity(0.8)
+                }
+                Spacer()
+                Image(systemName: "calendar.badge.plus").font(.title)
+            }
+            .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
+        }
+    }
+
+    private var maintenanceDueSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("ყურადღება მისაქცევი").font(.title3).fontWeight(.bold)
+            HStack {
+                Circle().fill(.orange).frame(width: 10, height: 10)
+                VStack(alignment: .leading) {
+                    Text("ძრავის ზეთის შეცვლა").fontWeight(.semibold)
+                    Text("ვადა გადაცილებულია 250 კმ-ით").font(.caption).foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
+            }
+            .padding().background(Color(.secondarySystemGroupedBackground)).cornerRadius(12)
+        }
+    }
+
+    private var upcomingServicesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("დაგეგმილი სერვისები").font(.title3).fontWeight(.bold)
+            VStack(spacing: 1) {
+                serviceRow(title: "ტექ. დათვალიერება", date: "24 თებერვალი, 2026", icon: "checkmark.seal.fill")
+                Divider().padding(.leading, 50)
+                serviceRow(title: "სამუხრუჭე ხუნდები", date: "15 მარტი, 2026", icon: "brake.fluid.fill")
+            }
+            .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12)
+        }
+    }
+
+    private func serviceRow(title: String, date: String, icon: String) -> some View {
+        HStack(spacing: 15) {
+            Image(systemName: icon).foregroundColor(.blue).font(.title3).frame(width: 30)
+            VStack(alignment: .leading) {
+                Text(title).fontWeight(.medium)
+                Text(date).font(.caption).foregroundColor(.secondary)
+            }
+            Spacer()
+            Image(systemName: "chevron.right").font(.caption).foregroundColor(.secondary)
+        }
+        .padding()
+    }
+
     private var emptyState: some View {
         VStack(spacing: 20) {
-            Image(systemName: "car.circle")
-                .font(.system(size: 80))
-                .foregroundColor(.gray)
-            Text("ავტომობილი არ არის დამატებული")
-                .font(.headline)
+            Image(systemName: "car.circle").font(.system(size: 80)).foregroundColor(.gray)
+            Text("ავტომობილი არ არის დამატებული").font(.headline)
         }
+        .frame(height: 200)
     }
 }
 
+// MARK: - CarDashboardCard
 struct CarDashboardCard: View {
     let car: MyCar
     @State private var showQRSheet = false
     private let context = CIContext()
     
     var body: some View {
-        VStack(alignment: .center, spacing: 15) {
+        VStack(alignment: .leading, spacing: 15) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(car.make).font(.title).fontWeight(.bold).foregroundColor(.white)
@@ -83,7 +161,7 @@ struct CarDashboardCard: View {
                                 .interpolation(.none).resizable()
                                 .frame(width: 75, height: 75)
                                 .padding(6).background(Color.white).cornerRadius(12)
-                            Text("დააჭირე სანახავად").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
+                            Text("სკანირება").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
                         }
                     }
                 }
@@ -112,7 +190,7 @@ struct CarDashboardCard: View {
     }
 }
 
-// QR კოდის გადიდების გვერდი
+// MARK: - QRDetailView
 struct QRDetailView: View {
     let car: MyCar
     @Environment(\.dismiss) var dismiss
