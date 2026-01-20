@@ -12,21 +12,47 @@ import CoreImage.CIFilterBuiltins
 struct MyCarView: View {
     @StateObject private var vehicleManager = VehicleManager.shared
     
+    // State ცვლადი აქტიური მანქანის ID-ის შესანახად
+    @State private var selectedCarID: String?
+    
+    @State private var showAddService = false
+    
+    // Computed Properties რეალური მონაცემების გასაფილტრად
+    private var currentServices: [ServiceRecord] {
+        guard let id = selectedCarID else { return [] }
+        return vehicleManager.services[id] ?? []
+    }
+    
+    private var maintenanceDue: ServiceRecord? {
+        // ვადაგადაცილებული სერვისი (isCompleted == false და თარიღი წარსულია)
+        currentServices.first { !$0.isCompleted && $0.date < Date() }
+    }
+    
+    private var upcomingServices: [ServiceRecord] {
+        // მომავალი სერვისები
+        currentServices.filter { !$0.isCompleted && $0.date >= Date() }
+            .sorted(by: { $0.date < $1.date })
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 25) {
                     
-                    // 1. ზედა სექცია: ავტომობილების კარუსელი
                     headerCarouselSection
                     
-                    // 2. სერვისის სექციები
                     VStack(spacing: 25) {
                         serviceQuickActionSection
                         
-                        maintenanceDueSection
+                        //  ვაჩვენებთ სექციას მხოლოდ თუ რეალური გაფრთხილება არსებობს
+                        if let service = maintenanceDue {
+                            maintenanceDueSection(for: service)
+                        }
                         
-                        upcomingServicesSection
+                        // ვაჩვენებთ დაგეგმილ სერვისებს დინამიურად
+                        if !upcomingServices.isEmpty {
+                            upcomingServicesSection(services: upcomingServices)
+                        }
                     }
                     .padding(.horizontal)
                 }
@@ -34,6 +60,12 @@ struct MyCarView: View {
             }
             .navigationTitle("ჩემი ავტომობილი")
             .background(Color(.systemGroupedBackground))
+            // აპლიკაციის ჩართვისას ვიღებთ პირველივე მანქანის ID-ს
+            .onAppear {
+                if selectedCarID == nil {
+                    selectedCarID = vehicleManager.cars.first?.id
+                }
+            }
         }
     }
     
@@ -48,18 +80,25 @@ struct MyCarView: View {
                     ForEach(vehicleManager.cars) { car in
                         CarDashboardCard(car: car)
                             .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 30)
+                            //  თითოეულ ქარდს ვანიჭებთ ID-ს სინქრონიზაციისთვის
+                            .id(car.id)
                     }
                 }
             }
             .scrollTargetLayout()
         }
+        //  ვაკავშირებთ სქროლვის პოზიციას selectedCarID-სთან
+        .scrollPosition(id: $selectedCarID)
         .scrollTargetBehavior(.viewAligned)
         .contentMargins(.horizontal, 20, for: .scrollContent)
     }
 
-    // MARK: - Service UI Components
     private var serviceQuickActionSection: some View {
-        Button(action: { /* Booking Action */ }) {
+        Button(action: {
+            if selectedCarID != nil {
+                showAddService = true
+            }
+        }) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("სერვისის დაჯავშნა")
@@ -72,31 +111,45 @@ struct MyCarView: View {
             }
             .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
         }
+        .sheet(isPresented: $showAddService) {
+                if let carId = selectedCarID {
+                    AddServiceView(carId: carId)
+                }
+            }
     }
 
-    private var maintenanceDueSection: some View {
+    //  გადავაკეთეთ ფუნქციად, რომელიც იღებს კონკრეტულ სერვისს
+    private func maintenanceDueSection(for service: ServiceRecord) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("ყურადღება მისაქცევი").font(.title3).fontWeight(.bold)
             HStack {
-                Circle().fill(.orange).frame(width: 10, height: 10)
+                Circle().fill(.red).frame(width: 10, height: 10)
                 VStack(alignment: .leading) {
-                    Text("ძრავის ზეთის შეცვლა").fontWeight(.semibold)
-                    Text("ვადა გადაცილებულია 250 კმ-ით").font(.caption).foregroundColor(.secondary)
+                    Text(service.title).fontWeight(.semibold)
+                    Text("ვადა გადაცილებულია: \(service.date.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
-                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
+                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
             }
             .padding().background(Color(.secondarySystemGroupedBackground)).cornerRadius(12)
         }
     }
 
-    private var upcomingServicesSection: some View {
+    //  გადავაკეთეთ დინამიურ სექციად
+    private func upcomingServicesSection(services: [ServiceRecord]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("დაგეგმილი სერვისები").font(.title3).fontWeight(.bold)
             VStack(spacing: 1) {
-                serviceRow(title: "ტექ. დათვალიერება", date: "24 თებერვალი, 2026", icon: "checkmark.seal.fill")
-                Divider().padding(.leading, 50)
-                serviceRow(title: "სამუხრუჭე ხუნდები", date: "15 მარტი, 2026", icon: "brake.fluid.fill")
+                ForEach(services) { service in
+                    serviceRow(title: service.title,
+                               date: service.date.formatted(date: .long, time: .omitted),
+                               icon: "calendar.badge.clock")
+                    
+                    if service.id != services.last?.id {
+                        Divider().padding(.leading, 50)
+                    }
+                }
             }
             .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12)
         }
