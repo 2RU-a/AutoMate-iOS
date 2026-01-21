@@ -12,7 +12,9 @@ struct AddCarView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var vehicleManager = VehicleManager.shared
     
-    // 1. მონაცემები Picker-ისთვის
+    // ახალი ცვლადი: თუ ეს არის nil - ვამატებთ, თუ არა - ვაედითებთ
+    var carToEdit: MyCar?
+    
     let carData: [String: [String]] = [
         "BMW": ["1 Series", "3 Series", "5 Series", "X5", "X6", "M4"],
         "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "GLE", "G-Wagon"],
@@ -20,7 +22,6 @@ struct AddCarView: View {
         "Audi": ["A3", "A4", "A6", "Q5", "Q7", "e-tron"]
     ]
     
-    // 2. ფორმის State-ები
     @State private var selectedMake = "BMW"
     @State private var selectedModel = ""
     @State private var selectedYear = Calendar.current.component(.year, from: Date())
@@ -33,16 +34,15 @@ struct AddCarView: View {
         NavigationStack {
             Form {
                 Section("ავტომობილის მონაცემები") {
-                    // ბრენდის არჩევა
-                    Picker("მარკა", selection: $selectedMake) {
+                    Picker("მწარმოებელი", selection: $selectedMake) {
                         ForEach(carData.keys.sorted(), id: \.self) { make in
                             Text(make).tag(make)
                         }
                     }
-                    .onChange(of: selectedMake) { oldValue, newValue in
+                    .onChange(of: selectedMake) { _, newValue in
                         selectedModel = carData[newValue]?.first ?? ""
                     }
-                    // მოდელის არჩევა (დინამიურად იცვლება მარკის მიხედვით)
+
                     Picker("მოდელი", selection: $selectedModel) {
                         if let models = carData[selectedMake] {
                             ForEach(models, id: \.self) { model in
@@ -51,7 +51,6 @@ struct AddCarView: View {
                         }
                     }
 
-                    // წლის არჩევა
                     Picker("წელი", selection: $selectedYear) {
                         ForEach(years, id: \.self) { year in
                             Text(String(year)).tag(year)
@@ -62,35 +61,60 @@ struct AddCarView: View {
                 Section("დამატებითი დეტალები") {
                     TextField("ძრავი (მაგ: 3.0 B58)", text: $engine)
                     TextField("VIN კოდი", text: $vinCode)
-                        .autocapitalization(.allCharacters)
+                        .textInputAutocapitalization(.characters)
                 }
                 
-                Button("შენახვა") {
-                    let newCar = MyCar(
-                        make: selectedMake,
-                        model: selectedModel,
-                        year: String(selectedYear),
-                        engine: engine,
-                        vinCode: vinCode
-                    )
-                    vehicleManager.addCar(newCar)
-                    dismiss()
+                Button(carToEdit == nil ? "შენახვა" : "განახლება") {
+                    saveCar()
                 }
                 .frame(maxWidth: .infinity)
-                .disabled(engine.isEmpty) // ძრავის მითითება სავალდებულოა
+                .disabled(engine.isEmpty || selectedModel.isEmpty)
             }
-            .navigationTitle("ავტომობილის დამატება")
+            .navigationTitle(carToEdit == nil ? "დამატება" : "რედაქტირება")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("გაუქმება") { dismiss() }
                 }
             }
-            .onAppear {
-                // პირველადი მნიშვნელობის მინიჭება მოდელისთვის
-                if selectedModel.isEmpty {
-                    selectedModel = carData[selectedMake]?.first ?? ""
-                }
-            }
+            .onAppear(perform: setupInitialValues)
         }
+    }
+    
+    // დამხმარე ფუნქცია მნიშვნელობების შესავსებად
+    private func setupInitialValues() {
+        if let car = carToEdit {
+            selectedMake = car.make
+            selectedModel = car.model
+            selectedYear = Int(car.year) ?? 2024
+            engine = car.engine
+            vinCode = car.vinCode ?? ""
+        } else if selectedModel.isEmpty {
+            selectedModel = carData[selectedMake]?.first ?? ""
+        }
+    }
+    
+    //  შენახვის/განახლების ლოგიკა
+    private func saveCar() {
+        var car = MyCar(
+            make: selectedMake,
+            model: modelFormatted,
+            year: String(selectedYear),
+            engine: engine,
+            vinCode: vinCode
+        )
+        
+        if let carToEdit = carToEdit {
+            // რედაქტირება: ვინარჩუნებთ არსებულ ID-ს
+            car.id = carToEdit.id
+            vehicleManager.addCar(car) // addCar ფუნქცია თავად მიხვდება განახლებას
+        } else {
+            // ახლის დამატება
+            vehicleManager.addCar(car)
+        }
+        dismiss()
+    }
+    
+    private var modelFormatted: String {
+        selectedModel.isEmpty ? (carData[selectedMake]?.first ?? "") : selectedModel
     }
 }

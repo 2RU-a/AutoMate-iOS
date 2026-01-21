@@ -11,7 +11,9 @@ struct VehicleManagementView: View {
     @StateObject private var vehicleManager = VehicleManager.shared
     @State private var showAddCar = false
     
-    // Alert-ის მართვისთვის საჭირო State-ები
+    // ცვლადი შერჩეული მანქანის შესანახად
+    @State private var selectedCarForEdit: MyCar?
+    
     @State private var showDeleteAlert = false
     @State private var indexSetToDelete: IndexSet?
     
@@ -21,10 +23,12 @@ struct VehicleManagementView: View {
                 emptyStateView
             } else {
                 ForEach(vehicleManager.cars) { car in
-                    carRowView(car: car)
+                    // აქ ვამატებთ NavigationLink-ს რედაქტირებისთვის
+                    NavigationLink(destination: AddCarView(carToEdit: car)) {
+                        carRowView(car: car)
+                    }
                 }
                 .onDelete { indexSet in
-                    // პირდაპირ კი არ ვშლით, ვიმახსოვრებთ ინდექსს და ვაჩვენებთ Alert-ს
                     self.indexSetToDelete = indexSet
                     self.showDeleteAlert = true
                 }
@@ -35,6 +39,7 @@ struct VehicleManagementView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
+                    selectedCarForEdit = nil // ახალი მანქანისთვის ვასუფთავებთ
                     showAddCar = true
                 } label: {
                     Image(systemName: "plus.circle.fill")
@@ -43,9 +48,9 @@ struct VehicleManagementView: View {
             }
         }
         .sheet(isPresented: $showAddCar) {
-            AddCarView()
+            // ✅ აქ გადაეცემა nil, რადგან ახალს ვამატებთ
+            AddCarView(carToEdit: nil)
         }
-        // წაშლის დადასტურების Alert
         .alert("ავტომობილის წაშლა", isPresented: $showDeleteAlert) {
             Button("წაშლა", role: .destructive) {
                 if let indexSet = indexSetToDelete {

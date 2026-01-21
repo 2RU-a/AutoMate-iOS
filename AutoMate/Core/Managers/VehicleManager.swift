@@ -111,13 +111,21 @@ class VehicleManager: ObservableObject {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         
         do {
-            // სწორი გზა: მომხმარებლის შიგნით
-            _ = try db.collection("users").document(userId).collection("cars").addDocument(from: car)
-            print("DEBUG: Car added successfully")
+            if let carId = car.id {
+                // თუ მანქანას ID უკვე აქვს, ვაახლებთ არსებულს (setData)
+                try db.collection("users").document(userId)
+                    .collection("cars").document(carId)
+                    .setData(from: car)
+            } else {
+                // თუ ID არ აქვს, ვამატებთ ახალს (addDocument)
+                _ = try db.collection("users").document(userId)
+                    .collection("cars").addDocument(from: car)
+            }
         } catch {
-            print("DEBUG: Error adding car: \(error.localizedDescription)")
+            print("DEBUG: Error saving car - \(error.localizedDescription)")
         }
     }
+    
     
     func removeCar(at offsets: IndexSet) {
         guard let userId = Auth.auth().currentUser?.uid else { return }
