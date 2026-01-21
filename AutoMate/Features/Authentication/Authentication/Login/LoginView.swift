@@ -55,19 +55,28 @@ struct LoginView: View {
                         .foregroundColor(.red)
                         .font(.caption)
                 }
+                
                 // მთავარი ლოგინის ღილაკი
                 Button {
                     authManager.login(withEmail: email, password: password)
                 } label: {
-                    Text("შესვლა")
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(12)
+                    HStack {
+                        if authManager.isLoading {
+                            //აქ ვიძახებთ შენს შექმნილ UIKit კომპონენტს
+                            UIKitLoadingIndicator(isAnimating: true, style: .medium)
+                                .padding(.trailing, 5)
+                        }
+                        
+                        Text(authManager.isLoading ? "იტვირთება..." : "შესვლა")
+                            .fontWeight(.bold)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(email.isEmpty || password.isEmpty ? Color.gray : Color.blue)
+                    .cornerRadius(12)
                 }
-                .padding(.horizontal)
+                .disabled(authManager.isLoading || email.isEmpty || password.isEmpty) // პროცესის დროს ღილაკი გაითიშოს
                 
                 // "ან" გამყოფი
                 HStack {

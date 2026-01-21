@@ -13,6 +13,7 @@ class AuthManager: ObservableObject {
     static let shared = AuthManager()
     @Published var userSession: FirebaseAuth.User?
     @Published var errorMessage: String?
+    @Published var isLoading: Bool = false
     
     var isAnonymous: Bool {
             return userSession?.isAnonymous ?? true

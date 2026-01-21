@@ -10,7 +10,7 @@ import SwiftUI
 
 struct AddAddressView: View {
     @Environment(\.dismiss) var dismiss
-    var onSave: (Address) -> Void
+    var onSave: (UserAddress) -> Void
     
     @State private var title = ""
     @State private var city = "თბილისი"
@@ -41,7 +41,7 @@ struct AddAddressView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("შენახვა") {
-                        let newAddress = Address(title: title, city: city, street: street, isDefault: isDefault)
+                        let newAddress = UserAddress(title: title, city: city, street: street, isDefault: isDefault)
                         onSave(newAddress)
                         dismiss()
                     }

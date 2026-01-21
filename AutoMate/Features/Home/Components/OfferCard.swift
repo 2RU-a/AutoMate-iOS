@@ -49,7 +49,7 @@ struct OfferCard: View {
         .frame(height: 160)
         .background(
             LinearGradient(
-                colors: [Color.blue, Color.purple],
+                colors: [Color.red, Color.yellow],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

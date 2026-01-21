@@ -23,25 +23,21 @@ struct HomeHeaderView: View {
             Spacer()
             
             // ნოტიფიკაციის ღილაკი
-            Button {
-                // Action
-            } label: {
-                Image(systemName: "bell.badge")
-                    .font(.title3)
-                    .foregroundColor(.primary)
-                    .padding(10)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(Circle())
-            }
+//            Button {
+//                // Action
+//            } label: {
+//                Image(systemName: "bell.badge")
+//                    .font(.title3)
+//                    .foregroundColor(.primary)
+//                    .padding(10)
+//                    .background(Color(.secondarySystemBackground))
+//                    .clipShape(Circle())
+//            }
         }
         .padding(.horizontal)
         .padding(.bottom, 10)
         .background(Color(.systemBackground))
     }
-}
-
-#Preview {
-    HomeHeaderView()
 }
 
 #Preview {

@@ -9,24 +9,24 @@ import SwiftUI
 import FirebaseAuth
 
 struct ProfileView: View {
-    @StateObject private var authManager = AuthManager.shared // დავამატეთ სესიის კონტროლისთვის
+    @StateObject private var authManager = AuthManager.shared
+    
+    //  UIKit SafariView-ს მართვისთვის
+    @State private var showPrivacyPolicy = false
     
     var body: some View {
         NavigationStack {
             List {
                 if authManager.isAnonymous {
-                    // (თუ ანონიმურია)
                     Section {
                         GuestPlaceholderView(
                             title: "პროფილი",
                             message: "თქვენი მონაცემების სანახავად და სამართავად გთხოვთ გაიაროთ რეგისტრაცია"
                         )
-                        .listRowBackground(Color.clear) // რომ სექციის ჩარჩო არ გამოჩნდეს
+                        .listRowBackground(Color.clear)
                     }
                 } else {
                     // ავტორიზებული მომხმარებლის ხედი
-                    
-                    // პირადი ინფორმაცია (რეალური მონაცემებით)
                     Section(header: Text("პირადი ინფორმაცია")) {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack(spacing: 15) {
@@ -36,10 +36,9 @@ struct ProfileView: View {
                                     .foregroundColor(.blue)
                                 
                                 VStack(alignment: .leading) {
-                                    // Firebase-დან წამოღებული სახელი (თუ გვაქვს)
                                     Text(authManager.userSession?.displayName ?? "მომხმარებელი")
                                         .font(.headline)
-                                    // Firebase-დან წამოღებული მეილი
+                                    
                                     Text(authManager.userSession?.email ?? "იმეილი არ არის")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
@@ -52,7 +51,7 @@ struct ProfileView: View {
                                 ProfileInfoRow(label: "იმეილი", value: authManager.userSession?.email ?? "-")
                                 
                                 NavigationLink(destination: AddressManagementView()) {
-                                    ProfileInfoRow(label: "მისამართი", value: "თბილისი, ჭავჭავაძის გამზ. 1")
+                                    ProfileInfoRow(label: "მისამართი", value: "სახლი, სამსახური, და სხვა..")
                                 }
                             }
                         }
@@ -61,7 +60,7 @@ struct ProfileView: View {
                     
                     // ჩემი აქტივობა
                     Section(header: Text("ჩემი აქტივობა")) {
-                        NavigationLink(destination: OrdersHistoryView()) {
+                        NavigationLink(destination: Text("შეკვეთების ისტორია")) {
                             ProfileMenuRow(icon: "bag.fill", title: "შეკვეთები", color: .orange)
                         }
                         
@@ -69,7 +68,7 @@ struct ProfileView: View {
                             ProfileMenuRow(icon: "car.fill", title: "მანქანების მართვა", color: .blue)
                         }
                         
-                        NavigationLink(destination: FavoritesView()) {
+                        NavigationLink(destination: Text("ფავორიტები")) {
                             ProfileMenuRow(icon: "heart.fill", title: "სასურველი ნივთები", color: .red)
                         }
                     }
@@ -90,8 +89,15 @@ struct ProfileView: View {
                     
                     // მხარდაჭერა
                     Section(header: Text("მხარდაჭერა")) {
-                        NavigationLink(destination: FAQView()) {
+                        NavigationLink(destination: Text("FAQ")) {
                             ProfileMenuRow(icon: "questionmark.circle.fill", title: "ხშირად დასმული კითხვები (FAQ)", color: .purple)
+                        }
+                    }
+                    
+                    //  იურიდიული სექცია (UIKit SafariView)
+                    Section(header: Text("იურიდიული ინფორმაცია")) {
+                        Button(action: { showPrivacyPolicy = true }) {
+                            ProfileMenuRow(icon: "doc.text.fill", title: "კონფიდენციალურობის პოლიტიკა", color: .secondary)
                         }
                     }
                     
@@ -111,11 +117,18 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("პროფილი")
+            //  UIKit-ის SafariView-ს გამოძახება Sheet-ის მეშვეობით
+            .sheet(isPresented: $showPrivacyPolicy) {
+                if let url = URL(string: "https://www.apple.com/legal/privacy/") {
+                    SafariView(url: url)
+                        .ignoresSafeArea()
+                }
+            }
         }
     }
 }
 
-// MARK: - Profile Menu Row Component (შენარჩუნებულია უცვლელად)
+// MARK: - დამხმარე კომპონენტები (უცვლელი)
 struct ProfileMenuRow: View {
     let icon: String
     let title: String
@@ -141,7 +154,6 @@ struct ProfileMenuRow: View {
     }
 }
 
-// MARK: - Profile Info Row (შენარჩუნებულია უცვლელად)
 struct ProfileInfoRow: View {
     let label: String
     let value: String

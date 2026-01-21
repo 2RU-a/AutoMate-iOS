@@ -13,15 +13,15 @@ struct CheckoutView: View {
     
     // ფორმის მონაცემები
     @State private var selectedPaymentMethod = "ბარათით გადახდა"
-    @State private var selectedAddress: Address = Address(title: "სახლი", city: "თბილისი", street: "ჭავჭავაძის გამზ. 1", isDefault: true)
+    @State private var selectedAddress: UserAddress = UserAddress(title: "სახლი", city: "თბილისი", street: "ჭავჭავაძის გამზ. 1", isDefault: true)
     
     @State private var showAddressPicker = false
     @State private var showConfirmation = false
     
     // დროებითი მისამართების სია (მომავალში UserManager-იდან წამოვა)
     @State private var savedAddresses = [
-        Address(title: "სახლი", city: "თბილისი", street: "ჭავჭავაძის გამზ. 1", isDefault: true),
-        Address(title: "სამსახური", city: "თბილისი", street: "ყაზბეგის გამზ. 12", isDefault: false)
+        UserAddress(title: "სახლი", city: "თბილისი", street: "ჭავჭავაძის გამზ. 1", isDefault: true),
+        UserAddress(title: "სამსახური", city: "თბილისი", street: "ყაზბეგის გამზ. 12", isDefault: false)
     ]
     
     var body: some View {
@@ -126,10 +126,9 @@ struct CheckoutView: View {
                             Text(address.fullAddress).font(.caption).foregroundColor(.secondary)
                         }
                         Spacer()
-                        if selectedAddress.id == address.id {
+                        if let selectedId = selectedAddress.id, let currentId = address.id, selectedId == currentId {
                             Image(systemName: "checkmark").foregroundColor(.blue)
-                        }
-                    }
+                        }                    }
                 }
                 .foregroundColor(.primary)
             }
@@ -139,11 +138,15 @@ struct CheckoutView: View {
                 Button("დახურვა") { showAddressPicker = false }
             }
         }
-        .presentationDetents([.medium]) // ნახევარ ეკრანზე ამოდის
+        .presentationDetents([.fraction(0.7)])
     }
     
     private func processOrder() {
         cartManager.checkout()
         showConfirmation = true
     }
+}
+
+#Preview{
+    CheckoutView()
 }

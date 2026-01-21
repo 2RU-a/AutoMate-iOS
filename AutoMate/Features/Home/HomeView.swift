@@ -41,7 +41,7 @@ struct HomeView: View {
                 categoryId: "all"
             )
         }
-        // ✅ ეს ნაწილი აუცილებელია მონაცემების ჩასატვირთად
+        //  ეს ნაწილი აუცილებელია მონაცემების ჩასატვირთად
         .task {
             if viewModel.categories.isEmpty {
                 await viewModel.loadData()
@@ -62,14 +62,14 @@ struct HomeView: View {
             .background(Color(.secondarySystemBackground))
             .cornerRadius(12)
             
-            Button {
-                showFilters.toggle()
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .font(.title2)
-                    .symbolVariant(!filterOptions.selectedBrands.isEmpty || filterOptions.minPrice != nil ? .fill : .none)
-                    .foregroundColor(.blue)
-            }
+//            Button {
+//                showFilters.toggle()
+//            } label: {
+//                Image(systemName: "line.3.horizontal.decrease.circle")
+//                    .font(.title2)
+//                    .symbolVariant(!filterOptions.selectedBrands.isEmpty || filterOptions.minPrice != nil ? .fill : .none)
+//                    .foregroundColor(.blue)
+//            }
         }
         .padding(.horizontal)
     }

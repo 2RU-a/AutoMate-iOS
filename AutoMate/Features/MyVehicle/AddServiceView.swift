@@ -15,6 +15,7 @@ struct AddServiceView: View {
     // ფორმის მონაცემები
     @State private var title = ""
     @State private var date = Date()
+    @State private var adminNote = "" // დავამატე State ცვლადი UIKit-ისთვის
     
     // სერვისების წინასწარ განსაზღვრული სია
     let serviceTypes = [
@@ -39,6 +40,13 @@ struct AddServiceView: View {
                     }
                     
                     DatePicker("თარიღი", selection: $date, displayedComponents: .date)
+                }
+                
+                // UIKit-ის MultiLineTextField-ის გამოყენება
+                Section(header: Text("შენიშვნა")) {
+                    MultiLineTextField(text: $adminNote)
+                        .frame(height: 120) // სიმაღლის მითითება აუცილებელია
+                        .listRowInsets(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
                 }
                 
                 Section {
@@ -69,14 +77,15 @@ struct AddServiceView: View {
             title: title,
             date: date,
             mileage: nil,
-            isCompleted: false, // ✅ ავტომატურად ინახება როგორც false (დაგეგმილი)
-            note: nil
+            isCompleted: false,
+            note: adminNote.isEmpty ? nil : adminNote // ახლა note-ში ჩაიწერება UIKit-ის ტექსტი
         )
         
         vehicleManager.addService(to: carId, service: newService)
         dismiss()
     }
 }
+
 
 //#Preview {
 //    AddServiceView(carId: "test_car_123")
