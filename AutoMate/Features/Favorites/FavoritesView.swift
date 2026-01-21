@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FavoritesView: View {
     @StateObject private var favoritesManager = FavoritesManager.shared
+    @StateObject private var authManager = AuthManager.shared // დავამატე სესიის შესამოწმებლად
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -16,6 +17,25 @@ struct FavoritesView: View {
     ]
     
     var body: some View {
+        NavigationStack {
+            Group {
+                if authManager.isAnonymous {
+                    // ანონიმური სტუმრის რეჟიმის გაფრთხილება
+                    GuestPlaceholderView(
+                        title: "სასურველი ნივთები",
+                        message: "ნივთების ფავორიტებში დასამატებლად და შესანახად გთხოვთ გაიაროთ რეგისტრაცია"
+                    )
+                } else {
+                    //ავტორიზებული მომხმარებლის კონტენტი
+                    mainContent
+                }
+            }
+            .navigationTitle("ფავორიტები")
+            .background(Color(.systemGroupedBackground))
+        }
+    }
+    
+    private var mainContent: some View {
         ScrollView {
             VStack(alignment: .leading) {
                 if favoritesManager.favoriteProducts.isEmpty {
@@ -23,7 +43,6 @@ struct FavoritesView: View {
                 } else {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(favoritesManager.favoriteProducts) { product in
-                            // ვიყენებთ NavigationLink-ს, რომ აქედანაც გადავიდეთ დეტალებზე
                             NavigationLink(destination: ProductDetailView(product: product)) {
                                 FavoriteProductCard(product: product)
                             }
@@ -34,8 +53,6 @@ struct FavoritesView: View {
                 }
             }
         }
-        .navigationTitle("ფავორიტები")
-        .background(Color(.systemGroupedBackground))
     }
     
     private var emptyState: some View {

@@ -6,23 +6,18 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct HomeHeaderView: View {
-    // მომავალში აქ User-ის სახელი შემოვა
-    var userName: String = "შუმახერ"
+    // ვაკავშირებთ AuthManager-ს სესიის მონაცემების მისაღებად
+    @StateObject private var authManager = AuthManager.shared
     
     var body: some View {
         HStack {
-            // ტექსტები
             VStack(alignment: .leading, spacing: 4) {
-                Text("გამარჯობა, \(userName) 👋")
+                Text("გამარჯობა \(authManager.userSession?.displayName ?? "") 👋")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                
-//                Text("რას ეძებ დღეს?")
-//                    .font(.title2)
-//                    .bold()
-//                    .foregroundColor(.primary)
             }
             
             Spacer()
@@ -43,6 +38,10 @@ struct HomeHeaderView: View {
         .padding(.bottom, 10)
         .background(Color(.systemBackground))
     }
+}
+
+#Preview {
+    HomeHeaderView()
 }
 
 #Preview {

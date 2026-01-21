@@ -9,17 +9,28 @@ import Foundation
 import SwiftUI
 
 struct RootView: View {
-    // აქ მომავალში დაემატება @EnvironmentObject var authService...
-    @State private var isAuthenticated: Bool = true // დროებით: სულ დალოგინებულია
+    // ვაკავშირებთ AuthManager-ს, რომელიც აკონტროლებს სესიას
+    @StateObject var authManager = AuthManager.shared
     
     var body: some View {
         Group {
-            if isAuthenticated {
+            // ვამოწმებთ, არის თუ არა userSession შევსებული
+            if authManager.userSession != nil {
                 MainTabView()
             } else {
-                // მომავალში აქ იქნება:
-                // LoginView()
-                Text("Login Screen")
+                // თუ არ არის დალოგინებული, ვაჩვენებთ ლოგინის გვერდს
+                LoginView()
+            }
+        }
+        // როდესაც სესია იცვლება (მომხმარებელი შედის ან გამოდის),
+        // ვაიძულებთ VehicleManager-ს თავიდან წამოიღოს მონაცემები
+        .onChange(of: authManager.userSession) { oldValue, newValue in
+            if newValue != nil {
+                // თუ მომხმარებელი დალოგინდა, წამოვიღოთ მისი მანქანები
+                VehicleManager.shared.fetchCars()
+            } else {
+                // თუ გამოვიდა, სია გავასუფთავოთ (უსაფრთხოებისთვის)
+                VehicleManager.shared.cars = []
             }
         }
     }

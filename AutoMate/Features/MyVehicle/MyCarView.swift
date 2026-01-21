@@ -11,10 +11,9 @@ import CoreImage.CIFilterBuiltins
 
 struct MyCarView: View {
     @StateObject private var vehicleManager = VehicleManager.shared
+    @StateObject private var authManager = AuthManager.shared
     
-    // State ცვლადი აქტიური მანქანის ID-ის შესანახად
     @State private var selectedCarID: String?
-    
     @State private var showAddService = false
     
     // Computed Properties რეალური მონაცემების გასაფილტრად
@@ -24,48 +23,61 @@ struct MyCarView: View {
     }
     
     private var maintenanceDue: ServiceRecord? {
-        // ვადაგადაცილებული სერვისი (isCompleted == false და თარიღი წარსულია)
         currentServices.first { !$0.isCompleted && $0.date < Date() }
     }
     
     private var upcomingServices: [ServiceRecord] {
-        // მომავალი სერვისები
         currentServices.filter { !$0.isCompleted && $0.date >= Date() }
             .sorted(by: { $0.date < $1.date })
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 25) {
-                    
-                    headerCarouselSection
-                    
-                    VStack(spacing: 25) {
-                        serviceQuickActionSection
-                        
-                        //  ვაჩვენებთ სექციას მხოლოდ თუ რეალური გაფრთხილება არსებობს
-                        if let service = maintenanceDue {
-                            maintenanceDueSection(for: service)
-                        }
-                        
-                        // ვაჩვენებთ დაგეგმილ სერვისებს დინამიურად
-                        if !upcomingServices.isEmpty {
-                            upcomingServicesSection(services: upcomingServices)
-                        }
-                    }
-                    .padding(.horizontal)
+            Group {
+                // ანონიმური სტუმრის რეჟიმის შემოწმება
+                if authManager.isAnonymous {
+                    GuestPlaceholderView(
+                        title: "თქვენი ავტო-ფარეხი",
+                        message: "მანქანების დასამატებლად და სერვისების სამართავად საჭიროა გაიაროთ რეგისტრაცია"
+                    )
+                } else {
+                    mainDashboardContent
                 }
-                .padding(.vertical)
             }
             .navigationTitle("ჩემი ავტომობილი")
             .background(Color(.systemGroupedBackground))
-            // აპლიკაციის ჩართვისას ვიღებთ პირველივე მანქანის ID-ს
             .onAppear {
                 if selectedCarID == nil {
                     selectedCarID = vehicleManager.cars.first?.id
                 }
             }
+        }
+    }
+    
+    // MARK: - Main Content View
+    private var mainDashboardContent: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 25) {
+                headerCarouselSection
+            
+                VStack(spacing: 25) {
+                    serviceQuickActionSection
+                    
+                    if let service = maintenanceDue {
+                        maintenanceDueSection(for: service)
+                    }
+                    
+                    if !upcomingServices.isEmpty {
+                        upcomingServicesSection(services: upcomingServices)
+                    } else if vehicleManager.cars.isEmpty {
+                        // თუ მანქანა არ არის, დამატებითი ინფო არ გამოჩნდება
+                    } else {
+                        noServicesSection
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding(.vertical)
         }
     }
     
@@ -80,14 +92,12 @@ struct MyCarView: View {
                     ForEach(vehicleManager.cars) { car in
                         CarDashboardCard(car: car)
                             .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 30)
-                            //  თითოეულ ქარდს ვანიჭებთ ID-ს სინქრონიზაციისთვის
                             .id(car.id)
                     }
                 }
             }
             .scrollTargetLayout()
         }
-        //  ვაკავშირებთ სქროლვის პოზიციას selectedCarID-სთან
         .scrollPosition(id: $selectedCarID)
         .scrollTargetBehavior(.viewAligned)
         .contentMargins(.horizontal, 20, for: .scrollContent)
@@ -103,7 +113,7 @@ struct MyCarView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("სერვისის დაჯავშნა")
                         .font(.headline)
-                    Text("მოძებნე უახლოესი სერვის ცენტრი")
+                    Text("ჩაინიშნე მომავალი ვიზიტი")
                         .font(.subheadline).opacity(0.8)
                 }
                 Spacer()
@@ -111,14 +121,15 @@ struct MyCarView: View {
             }
             .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
         }
+        .disabled(vehicleManager.cars.isEmpty) // თუ მანქანა არაა, ღილაკი გაითიშოს
+        .opacity(vehicleManager.cars.isEmpty ? 0.6 : 1.0)
         .sheet(isPresented: $showAddService) {
-                if let carId = selectedCarID {
-                    AddServiceView(carId: carId)
-                }
+            if let carId = selectedCarID {
+                AddServiceView(carId: carId)
             }
+        }
     }
 
-    //  გადავაკეთეთ ფუნქციად, რომელიც იღებს კონკრეტულ სერვისს
     private func maintenanceDueSection(for service: ServiceRecord) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("ყურადღება მისაქცევი").font(.title3).fontWeight(.bold)
@@ -136,7 +147,6 @@ struct MyCarView: View {
         }
     }
 
-    //  გადავაკეთეთ დინამიურ სექციად
     private func upcomingServicesSection(services: [ServiceRecord]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("დაგეგმილი სერვისები").font(.title3).fontWeight(.bold)
@@ -168,6 +178,14 @@ struct MyCarView: View {
         .padding()
     }
 
+    private var noServicesSection: some View {
+        Text("დაგეგმილი სერვისები არ გაქვთ")
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .frame(maxWidth: .infinity)
+            .padding()
+    }
+
     private var emptyState: some View {
         VStack(spacing: 20) {
             Image(systemName: "car.circle").font(.system(size: 80)).foregroundColor(.gray)
@@ -177,7 +195,7 @@ struct MyCarView: View {
     }
 }
 
-// MARK: - CarDashboardCard
+// MARK: - CarDashboardCard (ID Generator & UI)
 struct CarDashboardCard: View {
     let car: MyCar
     @State private var showQRSheet = false
@@ -214,7 +232,7 @@ struct CarDashboardCard: View {
                                 .interpolation(.none).resizable()
                                 .frame(width: 75, height: 75)
                                 .padding(6).background(Color.white).cornerRadius(12)
-                            Text("სკანირება").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
+                            Text("QR კოდი").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
                         }
                     }
                 }

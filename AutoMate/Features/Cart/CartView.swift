@@ -9,8 +9,29 @@ import SwiftUI
 
 struct CartView: View {
     @StateObject private var cartManager = CartManager.shared
+    @StateObject private var authManager = AuthManager.shared
     
     var body: some View {
+        NavigationStack {
+            Group {
+                if authManager.isAnonymous {
+                    // სტუმრის რეჟიმის შეზღუდვა
+                    GuestPlaceholderView(
+                        title: "თქვენი კალათა",
+                        message: "პროდუქტების შესაძენად და შეკვეთის გასაფორმებლად გთხოვთ გაიაროთ რეგისტრაცია"
+                    )
+                } else {
+                    // ავტორიზებული მომხმარებლის კალათა
+                    mainCartLayout
+                }
+            }
+            .navigationTitle("კალათა")
+            .background(Color(.systemGroupedBackground))
+        }
+    }
+    
+    // MARK: - Main Cart Layout
+    private var mainCartLayout: some View {
         VStack {
             if cartManager.items.isEmpty {
                 emptyCartView
@@ -26,7 +47,6 @@ struct CartView: View {
                 checkoutSection
             }
         }
-        .navigationTitle("კალათა")
     }
     
     // MARK: - Components
@@ -64,7 +84,6 @@ struct CartView: View {
             }
             .padding(.horizontal)
             
-            // ✅ შეცვლილია NavigationLink-ით
             NavigationLink(destination: CheckoutView()) {
                 Text("შეკვეთის გაფორმება")
                     .fontWeight(.bold)

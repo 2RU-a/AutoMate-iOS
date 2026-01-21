@@ -53,81 +53,102 @@ class VehicleManager: ObservableObject {
 import Foundation
 import Combine
 import FirebaseFirestore
+import FirebaseAuth
 
 class VehicleManager: ObservableObject {
     static let shared = VehicleManager()
     
     @Published var cars: [MyCar] = []
-    // [მანქანისID: სერვისებისსია] - ინახავს თითოეული მანქანის სერვისებს
     @Published var services: [String: [ServiceRecord]] = [:]
     
     private var db = Firestore.firestore()
-    private var listeners: [String: ListenerRegistration] = [:] // ლისენერების სამართავად
+    private var listeners: [String: ListenerRegistration] = [:]
+    private var carsListener: ListenerRegistration? // მთავარი ლისენერი მანქანებისთვის
     
     init() {
         fetchCars()
     }
     
     // MARK: - Car Management
-    
-    /// წამოიღებს ყველა მანქანას Cloud-დან
+
     func fetchCars() {
-        db.collection("cars").addSnapshotListener { [weak self] (querySnapshot, error) in
-            guard let documents = querySnapshot?.documents else {
-                print("Error fetching cars: \(error?.localizedDescription ?? "Unknown error")")
-                return
-            }
-            
-            self?.cars = documents.compactMap { doc in
-                try? doc.data(as: MyCar.self)
-            }
-            
-            // ავტომატურად ჩავრთოთ ლისენერები სერვისებისთვის თითოეული მანქანისთვის
-            self?.cars.forEach { car in
-                if let id = car.id {
-                    self?.fetchServices(for: id)
+        // 1. პირდაპირ ვამოწმებთ Firebase-ის მიმდინარე მომხმარებელს
+        guard let userId = Auth.auth().currentUser?.uid else {
+            print("DEBUG: VehicleManager - No user ID found")
+            self.cars = []
+            return
+        }
+
+        // ვაუქმებთ ძველ ლისენერს თუ არსებობდა (რომ ექაუნთებს შორის გადართვისას არ აირიოს)
+        carsListener?.remove()
+
+        print("DEBUG: Fetching cars for user: \(userId)")
+
+        // გზა: users -> USER_ID -> cars
+        carsListener = db.collection("users").document(userId).collection("cars")
+            .addSnapshotListener { [weak self] (querySnapshot, error) in
+                if let error = error {
+                    print("DEBUG: Error fetching cars: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let documents = querySnapshot?.documents else { return }
+                
+                self?.cars = documents.compactMap { doc in
+                    try? doc.data(as: MyCar.self)
+                }
+                
+                // სერვისების წამოღება თითოეული მანქანისთვის
+                self?.cars.forEach { car in
+                    if let id = car.id {
+                        self?.fetchServices(for: id)
+                    }
                 }
             }
-        }
     }
-    
-    /// ახალი მანქანის დამატება
+
     func addCar(_ car: MyCar) {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
         do {
-            _ = try db.collection("cars").addDocument(from: car)
+            // სწორი გზა: მომხმარებლის შიგნით
+            _ = try db.collection("users").document(userId).collection("cars").addDocument(from: car)
+            print("DEBUG: Car added successfully")
         } catch {
-            print("Error adding car: \(error.localizedDescription)")
+            print("DEBUG: Error adding car: \(error.localizedDescription)")
         }
     }
     
-    /// მანქანის წაშლა (შლის მანქანასაც და მის ქვე-კოლექციებსაც)
     func removeCar(at offsets: IndexSet) {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
         offsets.forEach { index in
             let car = cars[index]
-            if let documentId = car.id {
-                // წაშლა ბაზიდან
-                db.collection("cars").document(documentId).delete { error in
+            if let carId = car.id {
+                // სწორი გზა წაშლისთვის
+                db.collection("users").document(userId).collection("cars").document(carId).delete { error in
                     if let error = error {
-                        print("Error removing car: \(error.localizedDescription)")
+                        print("DEBUG: Error removing car: \(error.localizedDescription)")
                     } else {
-                        // წავშალოთ ლოკალური ლიზენერიც
-                        self.listeners[documentId]?.remove()
-                        self.listeners.removeValue(forKey: documentId)
+                        self.listeners[carId]?.remove()
+                        self.listeners.removeValue(forKey: carId)
                     }
                 }
             }
         }
     }
     
-    // MARK: - Service Management (Firestore Sub-collections)
-    
-    /// კონკრეტული მანქანის სერვისების წამოღება
+    // MARK: - Service Management
+
     func fetchServices(for carId: String) {
-        // თუ უკვე გვაქვს აქტიური ლისენერი, აღარ გვინდა ახლის დამატება
+        guard let userId = Auth.auth().currentUser?.uid else { return }
         guard listeners[carId] == nil else { return }
         
-        let listener = db.collection("cars").document(carId).collection("services")
-            .order(by: "date", descending: true) // დალაგება თარიღით
+        // სწორი გზა: users -> UID -> cars -> carId -> services
+        let listener = db.collection("users").document(userId)
+            .collection("cars").document(carId)
+            .collection("services")
+            .order(by: "date", descending: true)
             .addSnapshotListener { [weak self] (querySnapshot, error) in
                 guard let documents = querySnapshot?.documents else { return }
                 
@@ -143,12 +164,16 @@ class VehicleManager: ObservableObject {
         listeners[carId] = listener
     }
     
-    /// კონკრეტულ მანქანაზე სერვისის მიბმა
     func addService(to carId: String, service: ServiceRecord) {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        
         do {
-            _ = try db.collection("cars").document(carId).collection("services").addDocument(from: service)
+            // სწორი გზა: users -> UID -> cars -> carId -> services
+            _ = try db.collection("users").document(userId)
+                .collection("cars").document(carId)
+                .collection("services").addDocument(from: service)
         } catch {
-            print("Error adding service: \(error.localizedDescription)")
+            print("DEBUG: Error adding service: \(error.localizedDescription)")
         }
     }
 }
