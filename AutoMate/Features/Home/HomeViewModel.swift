@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseFirestore
 
 @MainActor
 class HomeViewModel: ObservableObject {
@@ -18,6 +19,7 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     
     private let service: HomeServiceProtocol
+    private let db = Firestore.firestore() // Firestore რეფერენსი
     
     init(service: HomeServiceProtocol? = nil) {
         self.service = service ?? MockHomeService()
@@ -25,20 +27,41 @@ class HomeViewModel: ObservableObject {
     
     func loadData() async {
         isLoading = true
+        
+        // 1. პარალელურად ვიწყებთ Mock მონაცემების წამოღებას (Offers, Categories)
         do {
-            // ერთდროულად ვიწერთ ყველაფერს
-            async let offers = service.fetchOffers()
-            async let categories = service.fetchCategories()
+            async let offersTask = service.fetchOffers()
+            async let categoriesTask = service.fetchCategories()
             
-            // თუ fetchAllProducts დაამატე პროტოკოლში, გამოიყენე ის
-            // თუ არა, დროებით პირდაპირ Product.sampleData მიანიჭე
-            self.products = Product.sampleData
+            // 2. Firebase-იდან პროდუქტების წამოღება
+            // ვიყენებთ await-ს რათა დაველოდოთ პროდუქტების ჩატვირთვას
+            let firebaseProducts = await fetchProductsFromFirebase()
             
-            self.offers = try await offers
-            self.categories = try await categories
+            // 3. მონაცემების მინიჭება
+            self.offers = try await offersTask
+            self.categories = try await categoriesTask
+            
+            // ნაცვლად სატესტო მონაცემებისა, მიანიჭე მხოლოდ ის, რაც ბაზიდან მოვიდა
+            self.products = firebaseProducts
+            
         } catch {
             print("ჩატვირთვის შეცდომა: \(error)")
         }
+        
         isLoading = false
+    }
+    
+    // ✅ ახალი ფუნქცია Firebase-ისთვის
+    private func fetchProductsFromFirebase() async -> [Product] {
+        do {
+            let snapshot = try await db.collection("products").getDocuments()
+            let fetchedProducts = snapshot.documents.compactMap { document -> Product? in
+                try? document.data(as: Product.self)
+            }
+            return fetchedProducts
+        } catch {
+            print("Firebase-იდან პროდუქტების წამოღება ვერ მოხერხდა: \(error)")
+            return []
+        }
     }
 }

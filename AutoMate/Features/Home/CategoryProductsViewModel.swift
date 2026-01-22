@@ -7,7 +7,7 @@
 
 import Foundation
 import Combine
-
+import FirebaseFirestore
 
 @MainActor
 class CategoryProductsViewModel: ObservableObject {
@@ -15,7 +15,7 @@ class CategoryProductsViewModel: ObservableObject {
     @Published var availableBrands: [String] = []
     @Published var isLoading: Bool = false
     
-    private let service = MockHomeService()
+    private let db = Firestore.firestore()
     let categoryId: String
     
     init(categoryId: String) {
@@ -24,14 +24,28 @@ class CategoryProductsViewModel: ObservableObject {
     
     func loadProducts() async {
         isLoading = true
+        
         do {
-            let fetched = try await service.fetchProducts(for: categoryId)
+            // 1. მივმართავთ "products" კოლექციას და ვფილტრავთ categoryId-ით
+            let snapshot = try await db.collection("products")
+                .whereField("categoryId", isEqualTo: categoryId)
+                .getDocuments()
+            
+            // 2. მონაცემების კონვერტაცია Product მოდელში
+            let fetched = snapshot.documents.compactMap { document -> Product? in
+                try? document.data(as: Product.self)
+            }
+            
+            // 3. შედეგის შენახვა
             self.products = fetched
-            // ბრენდების დინამიური ამოღება
+            
+            // 4. ბრენდების დინამიური ამოღება ფილტრისთვის
             self.availableBrands = Array(Set(fetched.map { $0.brand })).sorted()
+            
         } catch {
-            print(error)
+            print("Firebase-იდან კატეგორიის პროდუქტების წამოღება ვერ მოხერხდა: \(error)")
         }
+        
         isLoading = false
     }
 }

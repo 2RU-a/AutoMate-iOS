@@ -17,15 +17,41 @@ struct ProductDetailView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // 1. დიდი სურათი
+                    // 1. დიდი სურათი (განახლებული ლოგიკით)
                     ZStack {
                         RoundedRectangle(cornerRadius: 0)
                             .fill(Color(.secondarySystemBackground))
-                            .frame(height: 300)
+                            .frame(height: 350)
                         
-                        Image(systemName: product.imageName)
-                            .font(.system(size: 100))
-                            .foregroundColor(.gray)
+                        // ვამოწმებთ არის თუ არა imageName ვალიდური URL
+                        if let url = URL(string: product.imageName), url.scheme != nil {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .scaleEffect(1.5)
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 300)
+                                        .transition(.opacity)
+                                case .failure:
+                                    // თუ ლინკი გაფუჭებულია
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 80))
+                                        .foregroundColor(.gray)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                        } else {
+                            // თუ ბაზაში ისევ SF Symbol გვიწერია (მაგ: "drop.fill")
+                            Image(systemName: product.imageName)
+                                .font(.system(size: 100))
+                                .foregroundColor(.gray)
+                        }
                     }
                     
                     VStack(alignment: .leading, spacing: 15) {
@@ -58,6 +84,7 @@ struct ProductDetailView: View {
                                 .foregroundColor(.secondary)
                                 .lineSpacing(5)
                         }
+                        .padding(.bottom, 20)
                     }
                     .padding(.horizontal)
                 }
@@ -67,8 +94,7 @@ struct ProductDetailView: View {
             VStack {
                 Divider()
                 Button {
-                    // 2. გამოვიძახოთ დამატების ფუნქცია
-                    withAnimation {
+                    withAnimation(.spring()) {
                         cartManager.addToCart(product: product)
                     }
                 } label: {
@@ -79,7 +105,6 @@ struct ProductDetailView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    // 3. ვიზუალური ეფექტი: თუ უკვე კალათაშია, ფერი შევუცვალოთ (სურვილისამებრ)
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(12)

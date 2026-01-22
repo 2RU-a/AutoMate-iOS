@@ -99,9 +99,9 @@ struct CategoryProductsView: View {
     private var filterSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-
                 Menu {
-                    ForEach(viewModel.availableBrands, id: \.self) { brand in                       Button {
+                    ForEach(viewModel.availableBrands, id: \.self) { brand in
+                        Button {
                             toggleBrand(brand)
                         } label: {
                             HStack {
@@ -170,13 +170,14 @@ struct CategoryProductsView: View {
             switch filterOptions.sortBy {
             case .priceLowHigh: return p1.price < p2.price
             case .priceHighLow: return p1.price > p2.price
-            case .newest: return p1.id > p2.id
+            case .newest:
+                // ვიყენებთ Nil Coalescing ("") Optional-ის ამოსაღებად
+                return (p1.id ?? "") > (p2.id ?? "")
             }
         }
     }
 }
 
-// ✅ აუცილებელია ეს კომპონენტი იყოს ფაილში, რომ 'Cannot find in scope' შეცდომა არ მოგცეს
 struct FilterChip: View {
     let title: String
     let icon: String
