@@ -5,7 +5,6 @@
 //  Created by oto rurua on 16.01.26.
 //
 
-import Foundation
 import SwiftUI
 import CoreImage.CIFilterBuiltins
 
@@ -15,8 +14,9 @@ struct MyCarView: View {
     
     @State private var selectedCarID: String?
     @State private var showAddService = false
+    @State private var showAddCar = false // ახალი მანქანის დამატებისთვის
     
-    // Computed Properties რეალური მონაცემების გასაფილტრად
+    // MARK: - Computed Properties
     private var currentServices: [ServiceRecord] {
         guard let id = selectedCarID else { return [] }
         return vehicleManager.services[id] ?? []
@@ -34,7 +34,6 @@ struct MyCarView: View {
     var body: some View {
         NavigationStack {
             Group {
-                // ანონიმური სტუმრის რეჟიმის შემოწმება
                 if authManager.isAnonymous {
                     GuestPlaceholderView(
                         title: "თქვენი ავტო-ფარეხი",
@@ -50,6 +49,9 @@ struct MyCarView: View {
                 if selectedCarID == nil {
                     selectedCarID = vehicleManager.cars.first?.id
                 }
+            }
+            .sheet(isPresented: $showAddCar) {
+                AddCarView(carToEdit: nil)
             }
         }
     }
@@ -70,7 +72,7 @@ struct MyCarView: View {
                     if !upcomingServices.isEmpty {
                         upcomingServicesSection(services: upcomingServices)
                     } else if vehicleManager.cars.isEmpty {
-                        // თუ მანქანა არ არის, დამატებითი ინფო არ გამოჩნდება
+                        // ცარიელი მდგომარეობა
                     } else {
                         noServicesSection
                     }
@@ -81,12 +83,12 @@ struct MyCarView: View {
         }
     }
     
-    // MARK: - Header Carousel Component
+    // MARK: - Header Carousel Component (With Add Card)
     private var headerCarouselSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 if vehicleManager.cars.isEmpty {
-                    emptyState
+                    addCarPlaceholder
                         .containerRelativeFrame(.horizontal)
                 } else {
                     ForEach(vehicleManager.cars) { car in
@@ -94,6 +96,11 @@ struct MyCarView: View {
                             .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 30)
                             .id(car.id)
                     }
+                    
+                    // "პლუს" ქარდი სიის ბოლოში
+                    addCarPlaceholder
+                        .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: 30)
+                        .id("add_new_car_placeholder")
                 }
             }
             .scrollTargetLayout()
@@ -101,6 +108,30 @@ struct MyCarView: View {
         .scrollPosition(id: $selectedCarID)
         .scrollTargetBehavior(.viewAligned)
         .contentMargins(.horizontal, 20, for: .scrollContent)
+    }
+
+    // MARK: - Add Car Placeholder Card
+    private var addCarPlaceholder: some View {
+        Button(action: { showAddCar = true }) {
+            VStack(spacing: 15) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.blue)
+                
+                Text("ახალი ავტომობილის დამატება")
+                    .font(.headline)
+                    .foregroundColor(.blue)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
+            .background(
+                RoundedRectangle(cornerRadius: 25)
+                    .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
+                    .foregroundColor(.blue.opacity(0.5))
+                    .background(Color.blue.opacity(0.05))
+            )
+            .cornerRadius(25)
+        }
     }
 
     private var serviceQuickActionSection: some View {
@@ -121,7 +152,7 @@ struct MyCarView: View {
             }
             .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
         }
-        .disabled(vehicleManager.cars.isEmpty) // თუ მანქანა არაა, ღილაკი გაითიშოს
+        .disabled(vehicleManager.cars.isEmpty)
         .opacity(vehicleManager.cars.isEmpty ? 0.6 : 1.0)
         .sheet(isPresented: $showAddService) {
             if let carId = selectedCarID {
@@ -184,14 +215,6 @@ struct MyCarView: View {
             .foregroundColor(.secondary)
             .frame(maxWidth: .infinity)
             .padding()
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "car.circle").font(.system(size: 80)).foregroundColor(.gray)
-            Text("ავტომობილი არ არის დამატებული").font(.headline)
-        }
-        .frame(height: 200)
     }
 }
 
@@ -259,41 +282,62 @@ struct CarDashboardCard: View {
         }
         return nil
     }
-}
-
-// MARK: - QRDetailView
-struct QRDetailView: View {
-    let car: MyCar
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        VStack(spacing: 30) {
-            Capsule().fill(Color.secondary.opacity(0.3)).frame(width: 40, height: 6).padding(.top, 12)
-            Text(car.fullName).font(.title2).fontWeight(.bold)
-            
-            if let vin = car.vinCode, let qrImage = generateQRCode(from: vin) {
-                Image(uiImage: qrImage)
-                    .interpolation(.none).resizable()
-                    .frame(width: 250, height: 250)
-                    .padding().background(Color.white).cornerRadius(20).shadow(radius: 10)
+    // MARK: - QRDetailView (ეს აკლდა კოდს)
+    struct QRDetailView: View {
+        let car: MyCar
+        @Environment(\.dismiss) var dismiss
+        
+        var body: some View {
+            VStack(spacing: 30) {
+                // ზედა ხაზი (Handle) Sheet-ისთვის
+                Capsule()
+                    .fill(Color.secondary.opacity(0.3))
+                    .frame(width: 40, height: 6)
+                    .padding(.top, 12)
                 
-                Text(vin).font(.system(.title3, design: .monospaced)).fontWeight(.bold)
+                Text("\(car.make) \(car.model)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                if let vin = car.vinCode, !vin.isEmpty, let qrImage = generateQRCode(from: vin) {
+                    VStack(spacing: 20) {
+                        Image(uiImage: qrImage)
+                            .interpolation(.none)
+                            .resizable()
+                            .frame(width: 250, height: 250)
+                            .padding()
+                            .background(Color.white)
+                            .cornerRadius(20)
+                            .shadow(color: .black.opacity(0.1), radius: 10)
+                        
+                        Text(vin)
+                            .font(.system(.title3, design: .monospaced))
+                            .fontWeight(.bold)
+                    }
+                }
+                
+                Spacer()
+                
+                Button("დახურვა") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.bottom, 20)
             }
-            Spacer()
-            Button("დახურვა") { dismiss() }.buttonStyle(.borderedProminent).padding(.bottom, 20)
+            .padding()
         }
-        .padding()
-    }
-    
-    func generateQRCode(from string: String) -> UIImage? {
-        let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(string.utf8)
-        if let outputImage = filter.outputImage {
-            let transformedImage = outputImage.transformed(by: CGAffineTransform(scaleX: 10, y: 10))
-            if let cgimg = CIContext().createCGImage(transformedImage, from: transformedImage.extent) {
-                return UIImage(cgImage: cgimg)
+        
+        // QR გენერატორი Offline მუშაობისთვის
+        func generateQRCode(from string: String) -> UIImage? {
+            let filter = CIFilter.qrCodeGenerator()
+            filter.message = Data(string.utf8)
+            if let outputImage = filter.outputImage {
+                let transformedImage = outputImage.transformed(by: CGAffineTransform(scaleX: 10, y: 10))
+                if let cgimg = CIContext().createCGImage(transformedImage, from: transformedImage.extent) {
+                    return UIImage(cgImage: cgimg)
+                }
             }
+            return nil
         }
-        return nil
     }
 }
