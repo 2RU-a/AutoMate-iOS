@@ -7,8 +7,7 @@
 
 import Foundation
 
-protocol HomeServiceProtocol {
+protocol HomeServiceProtocol: Sendable {
     func fetchOffers() async throws -> [Offer]
     func fetchCategories() async throws -> [Category]
-    func fetchProducts(for categoryId: String) async throws -> [Product]
 }

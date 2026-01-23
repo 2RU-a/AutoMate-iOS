@@ -5,18 +5,13 @@
 //  Created by oto rurua on 12.01.26.
 //
 
-import SwiftUI  
+import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
-    
-    // ძებნის და ფილტრაციის State-ები
     @State private var searchText = ""
     @State private var showFilters = false
     @State private var filterOptions = FilterOptions()
-    
-    // Grid-ის კონფიგურაცია
-//    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -25,14 +20,11 @@ struct HomeView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. ტოპ ჰედერი
             HomeHeaderView()
             
-            // 2. საძიებო ზოლი
             searchAndFilterBar
                 .padding(.vertical, 10)
             
-            // 3. კონტენტი
             ScrollView {
                 if !searchText.isEmpty {
                     searchResultsGrid
@@ -58,7 +50,7 @@ struct HomeView: View {
     
     // MARK: - Computed Property (ფილტრაციის ლოგიკა)
     private var filteredProducts: [Product] {
-        viewModel.products.filter { product in
+        viewModel.hotDeals.filter { product in
             let matchesSearch = searchText.isEmpty ||
                                product.name.localizedCaseInsensitiveContains(searchText) ||
                                product.brand.localizedCaseInsensitiveContains(searchText)
@@ -138,10 +130,34 @@ struct HomeView: View {
             
             categoriesSection
             
-            // Firebase პროდუქტების სექცია
-            allProductsSection
+            hotDealsSection
         }
         .padding(.top)
+    }
+    
+    // MARK: - Firebase "ცხელი შეთავაზებების" სექცია
+    private var hotDealsSection: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text("ცხელი შეთავაზებები")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            if viewModel.isLoading {
+                ProgressView().frame(maxWidth: .infinity)
+            } else if viewModel.hotDeals.isEmpty {
+                emptyStateView
+            } else {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(viewModel.hotDeals) { product in
+                        NavigationLink(destination: ProductDetailView(product: product)) {
+                            ProductCard(product: product)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
     }
     
     // MARK: - Empty State View
@@ -162,31 +178,6 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 50)
-    }
-    
-    // MARK: - Sections
-    private var allProductsSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("ყველა პროდუქტი")
-                .font(.headline)
-                .padding(.horizontal)
-            
-            if viewModel.isLoading {
-                ProgressView().frame(maxWidth: .infinity)
-            } else if viewModel.products.isEmpty {
-                emptyStateView
-            } else {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(viewModel.products) { product in
-                        NavigationLink(destination: ProductDetailView(product: product)) {
-                            ProductCard(product: product)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
     }
     
     private var categoriesSection: some View {
