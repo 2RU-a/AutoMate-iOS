@@ -9,8 +9,7 @@ import SwiftUI
 import MapKit
 
 struct AddressManagementView: View {
-    // ვიყენებთ მენეჯერს Dummy მონაცემების ნაცვლად
-    @StateObject private var addressManager = AddressManager()
+    @StateObject private var addressManager = AddressManager.shared
     @State private var isShowingAddAddress = false
     
     // რუკის საწყისი წერტილი
@@ -66,7 +65,7 @@ struct AddressManagementView: View {
                         }
                         .padding(.vertical, 4)
                     }
-                    .onDelete(perform: addressManager.deleteAddress) // ✅ წაშლა Firebase-დან
+                    .onDelete(perform: addressManager.deleteAddress) // წაშლა Firebase-დან
                 }
             }
         }

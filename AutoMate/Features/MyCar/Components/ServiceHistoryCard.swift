@@ -51,7 +51,7 @@ struct ServiceHistoryCard: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
                 
-                if let note = service.notes {
+                if let note = service.note {
                     Text(note)
                         .font(.caption)
                         .foregroundColor(.gray)

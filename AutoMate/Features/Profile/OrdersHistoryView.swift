@@ -110,6 +110,7 @@ struct OrdersHistoryView: View {
     private func statusColor(for status: Order.OrderStatus) -> Color {
         switch status {
         case .pending: return .orange
+        case .processing: return .blue
         case .delivered: return .green
         case .cancelled: return .red
         }

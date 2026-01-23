@@ -6,51 +6,37 @@
 //
 
 import SwiftUI
+import FirebaseFirestore
+import FirebaseAuth
 
 struct CheckoutView: View {
     @StateObject private var cartManager = CartManager.shared
+    // ვიყენებთ რეალურ მენეჯერს მისამართებისთვის
+    @StateObject private var addressManager = AddressManager.shared
     @Environment(\.dismiss) var dismiss
     
-    // ფორმის მონაცემები
     @State private var selectedPaymentMethod = "ბარათით გადახდა"
-    @State private var selectedAddress: UserAddress = UserAddress(title: "სახლი", city: "თბილისი", street: "ჭავჭავაძის გამზ. 1", isDefault: true)
+    // თავიდან ვირჩევთ Default მისამართს, თუ არსებობს
+    @State private var selectedAddress: UserAddress?
     
     @State private var showAddressPicker = false
     @State private var showConfirmation = false
-    
-    // დროებითი მისამართების სია (მომავალში UserManager-იდან წამოვა)
-    @State private var savedAddresses = [
-        UserAddress(title: "სახლი", city: "თბილისი", street: "ჭავჭავაძის გამზ. 1", isDefault: true),
-        UserAddress(title: "სამსახური", city: "თბილისი", street: "ყაზბეგის გამზ. 12", isDefault: false)
-    ]
     
     var body: some View {
         VStack {
             List {
                 // 1. მისამართის შერჩევა
                 Section(header: Text("მიწოდების მისამართი")) {
-                    HStack {
-                        Image(systemName: "mappin.and.ellipse")
-                            .foregroundColor(.red)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(selectedAddress.title)
+                    if let address = selectedAddress ?? addressManager.addresses.first(where: { $0.isDefault }) ?? addressManager.addresses.first {
+                        addressRow(address: address)
+                    } else {
+                        // თუ მისამართი საერთოდ არ აქვს დამატებული
+                        NavigationLink(destination: AddressManagementView()) {
+                            Text("დაამატეთ მისამართი")
+                                .foregroundColor(.red)
                                 .fontWeight(.bold)
-                            Text(selectedAddress.fullAddress)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
                         }
-                        
-                        Spacer()
-                        
-                        Button("შეცვლა") {
-                            showAddressPicker.toggle()
-                        }
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
                     }
-                    .padding(.vertical, 5)
                 }
                 
                 // 2. გადახდის მეთოდი
@@ -67,15 +53,13 @@ struct CheckoutView: View {
                 Section(header: Text("შეკვეთის შეჯამება")) {
                     ForEach(cartManager.items) { item in
                         HStack(spacing: 10) {
-                            if let url = URL(string: item.imageName), url.scheme != nil {
-                                AsyncImage(url: url) { image in
-                                    image.resizable().scaledToFill()
-                                } placeholder: {
-                                    Color.gray.opacity(0.2)
-                                }
-                                .frame(width: 30, height: 30)
-                                .cornerRadius(4)
+                            AsyncImage(url: URL(string: item.imageName)) { image in
+                                image.resizable().scaledToFill()
+                            } placeholder: {
+                                Color.gray.opacity(0.1)
                             }
+                            .frame(width: 30, height: 30)
+                            .cornerRadius(4)
                             
                             Text(item.name)
                                 .lineLimit(1)
@@ -85,8 +69,7 @@ struct CheckoutView: View {
                         .font(.caption)
                     }
                     HStack {
-                        Text("ჯამი")
-                            .fontWeight(.bold)
+                        Text("ჯამი").fontWeight(.bold)
                         Spacer()
                         Text(String(format: "%.2f ₾", cartManager.totalPrice))
                             .fontWeight(.bold)
@@ -96,36 +79,64 @@ struct CheckoutView: View {
             }
             
             // გადახდის ღილაკი
-            Button {
-                processOrder()
-            } label: {
-                Text("\(selectedPaymentMethod) — \(String(format: "%.2f ₾", cartManager.totalPrice))")
-                    .fontWeight(.bold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(cartManager.items.isEmpty ? Color.gray : Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-            .disabled(cartManager.items.isEmpty)
-            .padding()
+            confirmButton
         }
         .navigationTitle("გაფორმება")
-        // მისამართის ამომრჩევი Sheet
+        .onAppear {
+            // საწყისი მისამართის დაყენება
+            if selectedAddress == nil {
+                selectedAddress = addressManager.addresses.first(where: { $0.isDefault }) ?? addressManager.addresses.first
+            }
+        }
         .sheet(isPresented: $showAddressPicker) {
             addressPickerSheet
         }
         .alert("შეკვეთა მიღებულია!", isPresented: $showConfirmation) {
             Button("კარგი") { dismiss() }
         } message: {
-            Text("თქვენი შეკვეთა წარმატებით გაფორმდა მისამართზე: \(selectedAddress.fullAddress)")
+            Text("თქვენი შეკვეთა წარმატებით გაფორმდა!")
         }
     }
     
-    // MARK: - Address Picker Sheet
+    // MARK: - Components
+    
+    private func addressRow(address: UserAddress) -> some View {
+        HStack {
+            Image(systemName: "mappin.and.ellipse").foregroundColor(.red)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(address.title).fontWeight(.bold)
+                Text(address.fullAddress).font(.subheadline).foregroundColor(.secondary)
+            }
+            Spacer()
+            Button("შეცვლა") { showAddressPicker.toggle() }
+                .font(.caption).fontWeight(.bold).foregroundColor(.blue)
+        }
+        .padding(.vertical, 5)
+    }
+    
+    private var confirmButton: some View {
+        Button {
+            processOrder()
+        } label: {
+            Text("\(selectedPaymentMethod) — \(String(format: "%.2f ₾", cartManager.totalPrice))")
+                .fontWeight(.bold)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(canPlaceOrder ? Color.blue : Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+        }
+        .disabled(!canPlaceOrder)
+        .padding()
+    }
+    
+    private var canPlaceOrder: Bool {
+        !cartManager.items.isEmpty && (selectedAddress != nil || !addressManager.addresses.isEmpty)
+    }
+    
     private var addressPickerSheet: some View {
         NavigationStack {
-            List(savedAddresses) { address in
+            List(addressManager.addresses) { address in
                 Button {
                     selectedAddress = address
                     showAddressPicker = false
@@ -136,19 +147,19 @@ struct CheckoutView: View {
                             Text(address.fullAddress).font(.caption).foregroundColor(.secondary)
                         }
                         Spacer()
-                        if let selectedId = selectedAddress.id, let currentId = address.id, selectedId == currentId {
+                        if selectedAddress?.id == address.id {
                             Image(systemName: "checkmark").foregroundColor(.blue)
-                        }                    }
+                        }
+                    }
                 }
                 .foregroundColor(.primary)
             }
             .navigationTitle("აირჩიეთ მისამართი")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 Button("დახურვა") { showAddressPicker = false }
             }
         }
-        .presentationDetents([.fraction(0.7)])
+        .presentationDetents([.fraction(0.6)])
     }
     
     private func processOrder() {

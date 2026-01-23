@@ -12,10 +12,11 @@ struct Order: Identifiable, Codable {
     let date: Date
     let items: [Product]
     let totalPrice: Double
-    let status: OrderStatus
+    var status: OrderStatus
     
     enum OrderStatus: String, Codable {
         case pending = "მუშავდება"
+        case processing = "მზადდება"
         case delivered = "მოტანილია"
         case cancelled = "გაუქმებულია"
     }

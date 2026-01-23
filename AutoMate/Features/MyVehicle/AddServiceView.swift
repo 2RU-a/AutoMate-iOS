@@ -12,12 +12,12 @@ struct AddServiceView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var vehicleManager = VehicleManager.shared
     
-    // ფორმის მონაცემები
+
     @State private var title = ""
     @State private var date = Date()
-    @State private var adminNote = "" // დავამატე State ცვლადი UIKit-ისთვის
+    @State private var mileage = "" // გარბენისთვის (String-ად ვიღებთ TextInput-ისთვის)
+    @State private var adminNote = ""
     
-    // სერვისების წინასწარ განსაზღვრული სია
     let serviceTypes = [
         "ძრავის ზეთის შეცვლა",
         "ძრავის ღვედის შეცვლა",
@@ -25,7 +25,8 @@ struct AddServiceView: View {
         "სამუხრუჭე სითხის შეცვლა",
         "ტექ. დათვალიერება",
         "ჰაერის ფილტრის შეცვლა",
-        "საბურავების შეცვლა"
+        "საბურავების შეცვლა",
+        "სავალი ნაწილის შეკეთება"
     ]
 
     var body: some View {
@@ -39,24 +40,24 @@ struct AddServiceView: View {
                         }
                     }
                     
-                    DatePicker("თარიღი", selection: $date, displayedComponents: .date)
+                    // გარბენის ველი
+                    TextField("მიმდინარე გარბენი (კმ)", text: $mileage)
+                        .keyboardType(.numberPad)
+                    
+                    DatePicker("თარიღი", selection: $date, in: Date()..., displayedComponents: .date)
                 }
                 
-                // UIKit-ის MultiLineTextField-ის გამოყენება
-                Section(header: Text("შენიშვნა")) {
-                    MultiLineTextField(text: $adminNote)
-                        .frame(height: 120) // სიმაღლის მითითება აუცილებელია
-                        .listRowInsets(EdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5))
+                Section(header: Text("დამატებითი შენიშვნა")) {
+    
+                    TextField("მაგ: რა უნდა გაითვალისწინოს ხელოსანმა და ა.შ.", text: $adminNote, axis: .vertical)
+                        .lineLimit(4...10)
                 }
                 
                 Section {
                     Button(action: saveService) {
-                        HStack {
-                            Spacer()
-                            Text("დაჯავშნა")
-                                .fontWeight(.bold)
-                            Spacer()
-                        }
+                        Text("დაჯავშნა")
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
                     }
                     .disabled(title.isEmpty)
                 }
@@ -71,14 +72,16 @@ struct AddServiceView: View {
         }
     }
     
-    // MARK: - შენახვის ფუნქცია
     private func saveService() {
+        // გარბენის String-დან Int-ში გადაყვანა
+        let mileageInt = Int(mileage)
+        
         let newService = ServiceRecord(
             title: title,
             date: date,
-            mileage: nil,
+            mileage: mileageInt,
             isCompleted: false,
-            note: adminNote.isEmpty ? nil : adminNote // ახლა note-ში ჩაიწერება UIKit-ის ტექსტი
+            note: adminNote
         )
         
         vehicleManager.addService(to: carId, service: newService)
@@ -87,6 +90,6 @@ struct AddServiceView: View {
 }
 
 
-//#Preview {
-//    AddServiceView(carId: "test_car_123")
-//}
+#Preview {
+    AddServiceView(carId: "test_car_123")
+}

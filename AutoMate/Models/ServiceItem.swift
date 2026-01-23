@@ -15,7 +15,7 @@ struct ServiceItem: Identifiable, Codable {
     let date: Date
     let mileageAtService: Int  // მაგ: 150,000
     let cost: Double?          // მაგ: 120.00
-    let notes: String?
+    let note: String?
     
     // შემდეგი სერვისის პროგნოზი (შენი ლოგიკით - Optional)
     var nextDueMileage: Int?

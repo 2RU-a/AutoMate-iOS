@@ -5,50 +5,6 @@
 //  Created by oto rurua on 16.01.26.
 //
 
-//: MOCK
-/*
-import Foundation
-import Combine
-import SwiftUI
-
-class VehicleManager: ObservableObject {
-    static let shared = VehicleManager()
-    
-    @Published var cars: [MyCar] = [] {
-        didSet { saveToStorage() }
-    }
-    
-    init() { loadFromStorage() }
-    
-    func addCar(_ car: MyCar) {
-        cars.append(car)
-    }
-    
-    func removeCar(at offsets: IndexSet) {
-        cars.remove(atOffsets: offsets)
-    }
-    
-    private func saveToStorage() {
-        if let encoded = try? JSONEncoder().encode(cars) {
-            UserDefaults.standard.set(encoded, forKey: "automate_v5")
-        }
-    }
-    
-    private func loadFromStorage() {
-        // VehicleManager.swift-ში შეცვალე სატესტო ნაწილი:
-        if let data = UserDefaults.standard.data(forKey: "automate_v5"),
-           let decoded = try? JSONDecoder().decode([MyCar].self, from: data) {
-            self.cars = decoded
-        } else {
-            self.cars = [
-                MyCar(make: "BMW", model: "M5 F90", year: "2021", engine: "4.4 V8", vinCode: "WBSJF0000TEST123"),
-                MyCar(make: "Porsche", model: "911 Carrera", year: "2023", engine: "3.0 H6", vinCode: "WP0ZZZ99TEST456") // ✅ მეორე მანქანა
-            ]
-        }
-    }
-}
-*/
-
 
 import Foundation
 import Combine
@@ -72,14 +28,14 @@ class VehicleManager: ObservableObject {
     // MARK: - Car Management
 
     func fetchCars() {
-        // 1. პირდაპირ ვამოწმებთ Firebase-ის მიმდინარე მომხმარებელს
+        // ვამოწმებ Firebase-ის მიმდინარე მომხმარებელს
         guard let userId = Auth.auth().currentUser?.uid else {
             print("DEBUG: VehicleManager - No user ID found")
             self.cars = []
             return
         }
 
-        // ვაუქმებთ ძველ ლისენერს თუ არსებობდა (რომ ექაუნთებს შორის გადართვისას არ აირიოს)
+        // ვაუქმებ ძველ ლისენერს თუ არსებობდა (რომ ექაუნთებს შორის გადართვისას არ აირიოს)
         carsListener?.remove()
 
         print("DEBUG: Fetching cars for user: \(userId)")
@@ -132,12 +88,28 @@ class VehicleManager: ObservableObject {
         
         offsets.forEach { index in
             let car = cars[index]
-            if let carId = car.id {
-                // სწორი გზა წაშლისთვის
-                db.collection("users").document(userId).collection("cars").document(carId).delete { error in
+            guard let carId = car.id else { return }
+            
+            let carRef = db.collection("users").document(userId).collection("cars").document(carId)
+            
+            // 1. ვპოულობთ და ვშლით ყველა სერვისს, რომელიც ამ მანქანაზეა მიბმული
+            carRef.collection("services").getDocuments { (snapshot, error) in
+                if let error = error {
+                    print("DEBUG: Error fetching services for deletion: \(error.localizedDescription)")
+                }
+                
+                // სათითაოდ ვშლით თითოეულ სერვისს
+                snapshot?.documents.forEach { doc in
+                    doc.reference.delete()
+                }
+                
+                // 2. მას შემდეგ რაც ქვე-კოლექცია დაიცლება, ვშლით თავად მანქანას
+                carRef.delete { error in
                     if let error = error {
                         print("DEBUG: Error removing car: \(error.localizedDescription)")
                     } else {
+                        print("DEBUG: Car and its services successfully removed")
+                        // ვთიშავთ ამ მანქანის ლისენერს
                         self.listeners[carId]?.remove()
                         self.listeners.removeValue(forKey: carId)
                     }
@@ -184,4 +156,24 @@ class VehicleManager: ObservableObject {
             print("DEBUG: Error adding service: \(error.localizedDescription)")
         }
     }
+    
+    func completeService(carId: String, serviceId: String, note: String) {
+            guard let userId = Auth.auth().currentUser?.uid else { return }
+            
+            // გზა დოკუმენტამდე: users -> UID -> cars -> carId -> services -> serviceId
+            let serviceRef = db.collection("users").document(userId)
+                .collection("cars").document(carId)
+                .collection("services").document(serviceId)
+            
+            serviceRef.updateData([
+                "isCompleted": true,
+                "note": note
+            ]) { error in
+                if let error = error {
+                    print("DEBUG: Error completing service: \(error.localizedDescription)")
+                } else {
+                    print("DEBUG: Service successfully marked as completed")
+                }
+            }
+        }
 }

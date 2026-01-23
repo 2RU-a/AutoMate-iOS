@@ -23,8 +23,8 @@ class MockCarService: CarServiceProtocol {
         
         // აქ შეგვიძლია გავფილტროთ ID-ის მიხედვით, მაგრამ მარტივად დავაბრუნოთ სია
         return [
-            ServiceItem(id: "101", carId: carId, title: "ძრავის ზეთის შეცვლა", date: Date().addingTimeInterval(-86400 * 30), mileageAtService: 140000, cost: 120.0, notes: "Castrol 5W30", nextDueMileage: 148000, nextDueDate: nil),
-            ServiceItem(id: "102", carId: carId, title: "სამუხრუჭე ხუნდები", date: Date().addingTimeInterval(-86400 * 120), mileageAtService: 135000, cost: 250.0, notes: "Brembo", nextDueMileage: nil, nextDueDate: nil)
+            ServiceItem(id: "101", carId: carId, title: "ძრავის ზეთის შეცვლა", date: Date().addingTimeInterval(-86400 * 30), mileageAtService: 140000, cost: 120.0, note: "Castrol 5W30", nextDueMileage: 148000, nextDueDate: nil),
+            ServiceItem(id: "102", carId: carId, title: "სამუხრუჭე ხუნდები", date: Date().addingTimeInterval(-86400 * 120), mileageAtService: 135000, cost: 250.0, note: "Brembo", nextDueMileage: nil, nextDueDate: nil)
         ]
     }
     
