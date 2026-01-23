@@ -12,7 +12,7 @@ final class MockHomeService: HomeServiceProtocol, Sendable {
         try? await Task.sleep(for: .seconds(0.1))
         return [
             Offer(id: "1", title: "ზამთრის აქცია", subtitle: "20% ფასდაკლება", colorCode: "blue"),
-            Offer(id: "2", title: "უფასო დიაგნოსტიკა", subtitle: "Tegeta-სგან", colorCode: "orange")
+            Offer(id: "2", title: "უფასო დიაგნოსტიკა", subtitle: "AutoMate-სგან", colorCode: "orange")
         ]
     }
     

@@ -60,7 +60,7 @@ struct ProfileView: View {
                     
                     // ჩემი აქტივობა
                     Section(header: Text("ჩემი აქტივობა")) {
-                        NavigationLink(destination: Text("შეკვეთების ისტორია")) {
+                        NavigationLink(destination: OrdersHistoryView()) {
                             ProfileMenuRow(icon: "bag.fill", title: "შეკვეთები", color: .orange)
                         }
                         
@@ -68,11 +68,10 @@ struct ProfileView: View {
                             ProfileMenuRow(icon: "car.fill", title: "მანქანების მართვა", color: .blue)
                         }
                         
-                        NavigationLink(destination: Text("ფავორიტები")) {
+                        NavigationLink(destination: FavoritesView()) {
                             ProfileMenuRow(icon: "heart.fill", title: "სასურველი ნივთები", color: .red)
                         }
                     }
-                    
                     // აპლიკაციის პარამეტრები
                     Section(header: Text("აპლიკაციის პარამეტრები")) {
                         Toggle(isOn: .constant(true)) {

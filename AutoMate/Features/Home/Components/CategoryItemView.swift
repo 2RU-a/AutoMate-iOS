@@ -12,6 +12,7 @@ struct CategoryItemView: View {
     
     var body: some View {
         VStack(spacing: 12) {
+            // ხატულის სექცია წრეში
             ZStack {
                 Circle()
                     .fill(Color.blue.opacity(0.1))
@@ -22,10 +23,13 @@ struct CategoryItemView: View {
                     .foregroundColor(.blue)
             }
             
+            // კატეგორიის დასახელება
             Text(category.name)
                 .font(.caption)
-                .fontWeight(.medium)
+                .fontWeight(.bold)
                 .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 110)
@@ -33,3 +37,10 @@ struct CategoryItemView: View {
         .cornerRadius(16)
     }
 }
+
+//#Preview {
+//    CategoryItemView(category: Category(id: "1", name: "ძრავი", iconName: ""))
+//        .frame(width: 100)
+//        .padding()
+//    
+//}

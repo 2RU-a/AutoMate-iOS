@@ -66,14 +66,24 @@ struct CheckoutView: View {
                 // 3. შეჯამება
                 Section(header: Text("შეკვეთის შეჯამება")) {
                     ForEach(cartManager.items) { item in
-                        HStack {
+                        HStack(spacing: 10) {
+                            if let url = URL(string: item.imageName), url.scheme != nil {
+                                AsyncImage(url: url) { image in
+                                    image.resizable().scaledToFill()
+                                } placeholder: {
+                                    Color.gray.opacity(0.2)
+                                }
+                                .frame(width: 30, height: 30)
+                                .cornerRadius(4)
+                            }
+                            
                             Text(item.name)
+                                .lineLimit(1)
                             Spacer()
                             Text(item.formattedPrice)
                         }
                         .font(.caption)
                     }
-                    
                     HStack {
                         Text("ჯამი")
                             .fontWeight(.bold)

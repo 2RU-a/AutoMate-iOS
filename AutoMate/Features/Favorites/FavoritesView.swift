@@ -9,64 +9,76 @@ import SwiftUI
 
 struct FavoritesView: View {
     @StateObject private var favoritesManager = FavoritesManager.shared
-    @StateObject private var authManager = AuthManager.shared // დავამატე სესიის შესამოწმებლად
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
     
     var body: some View {
         NavigationStack {
             Group {
-                if authManager.isAnonymous {
-                    // ანონიმური სტუმრის რეჟიმის გაფრთხილება
-                    GuestPlaceholderView(
-                        title: "სასურველი ნივთები",
-                        message: "ნივთების ფავორიტებში დასამატებლად და შესანახად გთხოვთ გაიაროთ რეგისტრაცია"
-                    )
+                if favoritesManager.favoriteProducts.isEmpty {
+                    emptyFavoritesView
                 } else {
-                    //ავტორიზებული მომხმარებლის კონტენტი
-                    mainContent
+                    List {
+                        ForEach(favoritesManager.favoriteProducts) { product in
+                            NavigationLink(destination: ProductDetailView(product: product)) {
+                                favoriteRow(product: product)
+                            }
+                        }
+                        .onDelete { indexSet in
+                            // სლაიდით წაშლის შესაძლებლობა
+                            indexSet.forEach { index in
+                                let product = favoritesManager.favoriteProducts[index]
+                                favoritesManager.toggleFavorite(product)
+                            }
+                        }
+                    }
+                    .listStyle(PlainListStyle())
                 }
             }
             .navigationTitle("ფავორიტები")
-            .background(Color(.systemGroupedBackground))
         }
     }
     
-    private var mainContent: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                if favoritesManager.favoriteProducts.isEmpty {
-                    emptyState
-                } else {
-                    LazyVGrid(columns: columns, spacing: 20) {
-                        ForEach(favoritesManager.favoriteProducts) { product in
-                            NavigationLink(destination: ProductDetailView(product: product)) {
-                                FavoriteProductCard(product: product)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                    }
-                    .padding()
-                }
-            }
-        }
-    }
-    
-    private var emptyState: some View {
+    private var emptyFavoritesView: some View {
         VStack(spacing: 20) {
-            Spacer(minLength: 100)
             Image(systemName: "heart.slash")
-                .font(.system(size: 70))
-                .foregroundColor(.gray.opacity(0.5))
+                .font(.system(size: 80))
+                .foregroundColor(.gray.opacity(0.4))
             Text("ფავორიტების სია ცარიელია")
                 .font(.headline)
-            Text("მონიშნე პროდუქტები გულის ღილაკით")
-                .font(.subheadline)
                 .foregroundColor(.secondary)
         }
-        .frame(maxWidth: .infinity)
+    }
+    
+    private func favoriteRow(product: Product) -> some View {
+        HStack(spacing: 15) {
+            // სურათი Firebase-იდან
+            AsyncImage(url: URL(string: product.imageName)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Color.gray.opacity(0.1)
+            }
+            .frame(width: 70, height: 70)
+            .cornerRadius(10)
+            .clipped()
+            
+            VStack(alignment: .leading, spacing: 5) {
+                Text(product.brand)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.blue)
+                
+                Text(product.name)
+                    .font(.subheadline)
+                    .lineLimit(1)
+                
+                Text(product.formattedPrice)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 5)
     }
 }

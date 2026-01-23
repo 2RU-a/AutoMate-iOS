@@ -12,18 +12,37 @@ struct CartItemRow: View {
     
     var body: some View {
         HStack(spacing: 15) {
-            // პროდუქტის სურათი (პატარა)
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(.secondarySystemBackground))
                     .frame(width: 70, height: 70)
                 
-                Image(systemName: product.imageName)
-                    .font(.title2)
-                    .foregroundColor(.gray)
+                if let url = URL(string: product.imageName), url.scheme != nil {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 70, height: 70)
+                                .cornerRadius(10)
+                        case .failure:
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                } else {
+                    Image(systemName: product.imageName)
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                }
             }
+            .frame(width: 70, height: 70)
             
-            // ინფორმაცია
             VStack(alignment: .leading, spacing: 5) {
                 Text(product.brand)
                     .font(.caption)

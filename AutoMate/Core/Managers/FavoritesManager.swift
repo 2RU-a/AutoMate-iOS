@@ -12,19 +12,41 @@ import Combine
 class FavoritesManager: ObservableObject {
     static let shared = FavoritesManager()
     
-    @Published var favoriteProducts: [Product] = []
+    @Published var favoriteProducts: [Product] = [] {
+        didSet {
+            saveFavorites()
+        }
+    }
     
-    // ვამოწმებთ, არის თუ არა პროდუქტი უკვე ფავორიტებში
+    private let favoritesKey = "saved_favorites"
+    
+    private init() {
+        loadFavorites()
+    }
+    
     func isFavorite(_ product: Product) -> Bool {
         favoriteProducts.contains(where: { $0.id == product.id })
     }
     
-    // დამატება ან წაშლა (Toggle ლოგიკა)
     func toggleFavorite(_ product: Product) {
         if isFavorite(product) {
-            favoriteProducts.removeAll { $0.id == product.id }
+            favoriteProducts.removeAll(where: { $0.id == product.id })
         } else {
             favoriteProducts.append(product)
+        }
+    }
+    
+    // MARK: - Persistence
+    private func saveFavorites() {
+        if let encoded = try? JSONEncoder().encode(favoriteProducts) {
+            UserDefaults.standard.set(encoded, forKey: favoritesKey)
+        }
+    }
+    
+    private func loadFavorites() {
+        if let data = UserDefaults.standard.data(forKey: favoritesKey),
+           let decoded = try? JSONDecoder().decode([Product].self, from: data) {
+            self.favoriteProducts = decoded
         }
     }
 }
