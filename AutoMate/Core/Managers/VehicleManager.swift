@@ -13,13 +13,27 @@ import FirebaseAuth
 
 class VehicleManager: ObservableObject {
     static let shared = VehicleManager()
-    
-    @Published var cars: [MyCar] = []
-    @Published var services: [String: [ServiceRecord]] = [:]
-    
-    private var db = Firestore.firestore()
-    private var listeners: [String: ListenerRegistration] = [:]
-    private var carsListener: ListenerRegistration? // მთავარი ლისენერი მანქანებისთვის
+        
+        @Published var cars: [MyCar] = []
+        // სერვისები ინახება მანქანის ID-ის მიხედვით: ["CAR_ID": [ServiceRecord]]
+        @Published var services: [String: [ServiceRecord]] = [:]
+        
+        private var db = Firestore.firestore()
+        private var listeners: [String: ListenerRegistration] = [:]
+        private var carsListener: ListenerRegistration?
+        
+        // განახლებული ლოგიკა ყველა დასრულებული სერვისის გამოსატანად
+        var allCompletedServices: [ServiceRecord] {
+            var completedServices: [ServiceRecord] = []
+            
+            // გადავუყვებით დიქშენერის ყველა მნიშვნელობას
+            for (_, carServices) in services {
+                let finished = carServices.filter { $0.isCompleted }
+                completedServices.append(contentsOf: finished)
+            }
+            
+            return completedServices.sorted { $0.date > $1.date }
+        }
     
     init() {
         fetchCars()

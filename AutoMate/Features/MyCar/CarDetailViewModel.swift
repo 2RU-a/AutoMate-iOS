@@ -7,35 +7,30 @@
 
 import SwiftUI
 import Foundation
-import Combine // 👈 აუცილებელია ObservableObject-ისთვის
+import Combine
 
 @MainActor
 class CarDetailViewModel: ObservableObject {
-    
-    @Published var services: [ServiceItem] = []
+    @Published var services: [ServiceRecord] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
-    private let carService: CarServiceProtocol
+    // ვიყენებთ რეალურ მენეჯერს
+    private let vehicleManager = VehicleManager.shared
     private let carId: String
     
-    // აქაც ვიყენებთ Mock-ს დეფოლტად
-    init(carId: String, carService: CarServiceProtocol? = nil) {
+    init(carId: String) {
         self.carId = carId
-        self.carService = carService ?? MockCarService()
+        // საწყისი ჩატვირთვა
+        loadServices()
     }
     
-    func loadServices() async {
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            let fetchedServices = try await carService.fetchServiceHistory(for: carId)
-            self.services = fetchedServices.sorted(by: { $0.date > $1.date }) // ახლები ზემოთ
-        } catch {
-            self.errorMessage = "ისტორიის წამოღება ვერ მოხერხდა ან ჯერ არ დამატებულა"
+    func loadServices() {
+        // მოვძებნოთ კონკრეტული მანქანა მენეჯერში და წამოვიღოთ მისი სერვისები
+        if let car = vehicleManager.cars.first(where: { $0.id == carId }) {
+            self.services = (car.services ?? []).sorted(by: { $0.date > $1.date })
+        } else {
+            self.errorMessage = "მანქანა ვერ მოიძებნა"
         }
-        
-        isLoading = false
     }
 }

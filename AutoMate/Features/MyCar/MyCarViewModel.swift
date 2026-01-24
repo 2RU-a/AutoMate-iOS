@@ -9,59 +9,49 @@ import Foundation
 import SwiftUI
 import Combine
 
-@MainActor // ეს უზრუნველყოფს, რომ UI განახლებები მოხდეს მთავარ ნაკადში
+@MainActor
 class MyCarViewModel: ObservableObject {
     
-    // MARK: - Published Properties (UI State)
-    @Published var cars: [Car] = []
+    // MARK: - Published Properties
+    @Published var cars: [MyCar] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     
     // MARK: - Dependencies
-    private let carService: CarServiceProtocol
+    private let vehicleManager = VehicleManager.shared
+    private var cancellables = Set<AnyCancellable>()
     
-    // MARK: - Initializer (Dependency Injection)
-    // default მნიშვნელობად აქვს MockCarService, რაც ამარტივებს პრევიუს
-    init(carService: CarServiceProtocol? = nil) {
-            // თუ carService არ გადმოეცა, ვქმნით მას "შიგნით", რაც უსაფრთხოა
-            self.carService = carService ?? MockCarService()
-        }
+    // MARK: - Initializer
+    init() {
+        // ვაკავშირებთ ViewModel-ის მასივს მენეჯერის რეალურ მონაცემებთან
+        vehicleManager.$cars
+            .receive(on: RunLoop.main)
+            .sink { [weak self] updatedCars in
+                self?.cars = updatedCars
+            }
+            .store(in: &cancellables)
+    }
     
     // MARK: - Methods
     
-    func loadCars() async {
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            // მონაცემების წამოღება სერვისიდან
-            let fetchedCars = try await carService.fetchMyCars()
-            self.cars = fetchedCars
-        } catch {
-            // შეცდომის დამუშავება
-            self.errorMessage = "მონაცემების წამოღება ვერ მოხერხდა: \(error.localizedDescription)"
-        }
-        
-        isLoading = false
+    /// იძახებს მენეჯერში არსებულ წაშლის ფუნქციას ინდექსების მიხედვით.
+    /// გამოიყენება პირდაპირ List-ის .onDelete(perform:) მოდიფიკატორში.
+    func removeCars(at offsets: IndexSet) {
+        vehicleManager.removeCar(at: offsets)
     }
     
-    // MARK: - Car Deletion Logic
-    
-    func deleteCar(_ car: Car) async {
-        isLoading = true
-        
-        do {
-            // 1. ვეუბნებით სერვერს/ბაზას რომ წაშალოს
-            try await carService.deleteCar(id: car.id)
-            
-            // 2. თუ სერვერმა იმუშავა, ვშლით ლოკალური სიიდანაც
-            if let index = cars.firstIndex(where: { $0.id == car.id }) {
-                cars.remove(at: index)
-            }
-        } catch {
-            self.errorMessage = "წაშლა ვერ მოხერხდა: \(error.localizedDescription)"
+    /// თუ გჭირდება კონკრეტული ობიექტის წაშლა (მაგალითად, ღილაკზე დაჭერით და არა Swipe-ით)
+    func deleteSingleCar(_ car: MyCar) {
+        if let index = cars.firstIndex(where: { $0.id == car.id }) {
+            vehicleManager.removeCar(at: IndexSet(integer: index))
         }
-        
+    }
+    
+    func loadCars() {
+        // რადგან VehicleManager-ს აქვს რეალურ დროში მომუშავე Listener (SnapshotListener),
+        // ხელით ჩატვირთვა (fetch) ხშირად საჭირო აღარ არის, რადგან მონაცემები თავისით განახლდება.
+        isLoading = true
+        vehicleManager.fetchCars()
         isLoading = false
     }
 }

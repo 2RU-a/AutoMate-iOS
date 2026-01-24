@@ -10,162 +10,169 @@ import FirebaseAuth
 
 struct ProfileView: View {
     @StateObject private var authManager = AuthManager.shared
+    @StateObject private var addressManager = AddressManager.shared
     
-    //  UIKit SafariView-ს მართვისთვის
+    @State private var showEmailEdit = false
     @State private var showPrivacyPolicy = false
     
     var body: some View {
         NavigationStack {
             List {
-                if authManager.isAnonymous {
-                    Section {
-                        GuestPlaceholderView(
-                            title: "პროფილი",
-                            message: "თქვენი მონაცემების სანახავად და სამართავად გთხოვთ გაიაროთ რეგისტრაცია"
-                        )
-                        .listRowBackground(Color.clear)
-                    }
-                } else {
-                    // ავტორიზებული მომხმარებლის ხედი
-                    Section(header: Text("პირადი ინფორმაცია")) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(spacing: 15) {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .foregroundColor(.blue)
-                                
-                                VStack(alignment: .leading) {
-                                    Text(authManager.userSession?.displayName ?? "მომხმარებელი")
-                                        .font(.headline)
-                                    
-                                    Text(authManager.userSession?.email ?? "იმეილი არ არის")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
+                // 1. მომხმარებლის მთავარი ინფორმაცია
+                Section {
+                    HStack(spacing: 15) {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .frame(width: 60, height: 60)
+                            .foregroundColor(.blue)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            // 1. პირდაპირ ვიყენებთ მნიშვნელობას String-ად
+                            Text(authManager.userName.isEmpty ? "მომხმარებელი" : authManager.userName)
+                                .font(.headline)
                             
-                            Divider()
-                            
-                            Group {
-                                ProfileInfoRow(label: "იმეილი", value: authManager.userSession?.email ?? "-")
+                            HStack {
+                                // 2. აქაც პირდაპირი String მნიშვნელობა
+                                Text(authManager.userEmail)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                                 
-                                NavigationLink(destination: AddressManagementView()) {
-                                    ProfileInfoRow(label: "მისამართი", value: "სახლი, სამსახური, და სხვა..")
+                                Button {
+                                    showEmailEdit = true
+                                } label: {
+                                    Image(systemName: "pencil.circle.fill")
+                                        .foregroundColor(.blue)
+                                        .font(.system(size: 18))
                                 }
+                                .buttonStyle(.plain) // 3. შემოკლებული სინტაქსი
                             }
+                        }                    }
+                    .padding(.vertical, 8)
+                }
+
+                // 2. მისამართის სექცია
+                Section("მიწოდება") {
+                    NavigationLink(destination: AddressManagementView()) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("მისამართების მართვა")
+                                .font(.body)
+                            Text(addressManager.addresses.first(where: { $0.isDefault })?.fullAddress ?? "მისამართი არ არის მითითებული")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 5)
+                    }
+                }
+
+                // 3. ავტოფარეხი
+                Section("ჩემი ავტომობილები") {
+                    NavigationLink(destination: VehicleManagementView()) {
+                        Label("ავტოფარეხი", systemImage: "car.2.fill")
+                    }
+                }
+
+                // 4. ვაჭრობა და აქტივობა
+                Section("აქტივობა") {
+                    NavigationLink(destination: OrdersHistoryView()) {
+                        Label("შეკვეთების ისტორია", systemImage: "bag.fill")
                     }
                     
-                    // ჩემი აქტივობა
-                    Section(header: Text("ჩემი აქტივობა")) {
-                        NavigationLink(destination: OrdersHistoryView()) {
-                            ProfileMenuRow(icon: "bag.fill", title: "შეკვეთები", color: .orange)
-                        }
-                        
-                        NavigationLink(destination: VehicleManagementView()) {
-                            ProfileMenuRow(icon: "car.fill", title: "მანქანების მართვა", color: .blue)
-                        }
-                        
-                        NavigationLink(destination: FavoritesView()) {
-                            ProfileMenuRow(icon: "heart.fill", title: "სასურველი ნივთები", color: .red)
-                        }
+                    // ნოტიფიკაციების ნაცვლად ჩავსვათ სერვისების ისტორია
+                    NavigationLink(destination: ServiceHistoryView()) {
+                        Label("სერვისების ისტორია", systemImage: "wrench.and.screwdriver.fill")
                     }
-                    // აპლიკაციის პარამეტრები
-                    Section(header: Text("აპლიკაციის პარამეტრები")) {
-                        Toggle(isOn: .constant(true)) {
-                            HStack {
-                                Image(systemName: "bell.fill").foregroundColor(.orange)
-                                Text("ნოტიფიკაციები")
-                            }
-                        }
-                        
-                        NavigationLink(destination: Text("ენის არჩევა")) {
-                            ProfileMenuRow(icon: "globe", title: "ენა", color: .green)
-                        }
+                }
+
+                // 5. პარამეტრები და დახმარება
+                Section("პარამეტრები") {
+                    NavigationLink(destination: Text("Language View")) {
+                        Label("ენა", systemImage: "globe")
                     }
                     
-                    // მხარდაჭერა
-                    Section(header: Text("მხარდაჭერა")) {
-                        NavigationLink(destination: Text("FAQ")) {
-                            ProfileMenuRow(icon: "questionmark.circle.fill", title: "ხშირად დასმული კითხვები (FAQ)", color: .purple)
-                        }
+                    NavigationLink(destination: Text("FAQ View")) {
+                        Label("ხშირად დასმული კითხვები", systemImage: "questionmark.circle")
                     }
                     
-                    //  იურიდიული სექცია (UIKit SafariView)
-                    Section(header: Text("იურიდიული ინფორმაცია")) {
-                        Button(action: { showPrivacyPolicy = true }) {
-                            ProfileMenuRow(icon: "doc.text.fill", title: "კონფიდენციალურობის პოლიტიკა", color: .secondary)
-                        }
+                    Button(action: { showPrivacyPolicy = true }) {
+                        Label("კონფიდენციალურობის პოლიტიკა", systemImage: "lock.shield")
                     }
-                    
-                    // Logout ღილაკი
-                    Section {
-                        Button(role: .destructive) {
-                            authManager.signOut()
-                        } label: {
-                            HStack {
-                                Spacer()
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                                Text("გამოსვლა")
-                                Spacer()
-                            }
-                        }
+                    .foregroundColor(.primary)
+                }
+
+                // 6. გასვლა
+                Section {
+                    Button(role: .destructive, action: { authManager.signOut() }) {
+                        Label("გასვლა", systemImage: "arrow.right.circle")
                     }
                 }
             }
             .navigationTitle("პროფილი")
-            //  UIKit-ის SafariView-ს გამოძახება Sheet-ის მეშვეობით
+            .sheet(isPresented: $showEmailEdit) {
+                EmailUpdateView(currentEmail: authManager.userEmail)
+            }
             .sheet(isPresented: $showPrivacyPolicy) {
-                if let url = URL(string: "https://www.apple.com/legal/privacy/") {
-                    SafariView(url: url)
-                        .ignoresSafeArea()
-                }
+                SafariView(url: URL(string: "https://www.apple.com/legal/privacy/")!) // ჩასვი შენი ლინკი
             }
         }
     }
 }
 
-// MARK: - დამხმარე კომპონენტები (უცვლელი)
-struct ProfileMenuRow: View {
-    let icon: String
-    let title: String
-    let color: Color
+
+// MARK: - Email Update View (განახლებული ლოგიკით)
+struct EmailUpdateView: View {
+    @Environment(\.dismiss) var dismiss
+    @StateObject private var authManager = AuthManager.shared
+    @State private var email = ""
+    @State private var password = ""
+    @State private var errorMsg = ""
+    @State private var showSuccessAlert = false
+    
+    let currentEmail: String
     
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(.white)
-                .frame(width: 30, height: 30)
-                .background(color)
-                .cornerRadius(6)
-            
-            Text(title)
-                .foregroundColor(.primary)
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
+        NavigationStack {
+            Form {
+                Section(header: Text("მიმდინარე: \(currentEmail)")) {
+                    TextField("ახალი ელ-ფოსტა", text: $email)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                }
+                
+                Section(header: Text("დადასტურება"), footer: Text("უსაფრთხოებისთვის საჭიროა პაროლის შეყვანა.")) {
+                    SecureField("შეიყვანეთ პაროლი", text: $password)
+                }
+                
+                if !errorMsg.isEmpty {
+                    Text(errorMsg).foregroundColor(.red).font(.caption)
+                }
+                
+                Button("განახლების მოთხოვნა") {
+                    updateEmailAction()
+                }
+                .frame(maxWidth: .infinity)
+                .disabled(email.isEmpty || password.isEmpty)
+            }
+            .navigationTitle("იმეილის შეცვლა")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("დახურვა") { dismiss() }
+                }
+            }
+            .alert("ბმული გაიგზავნა", isPresented: $showSuccessAlert) {
+                Button("გავიგე") { dismiss() }
+            } message: {
+                Text("იმეილის შესაცვლელად დააჭირეთ დასტურის ბმულს, რომელიც გაიგზავნა \(email)-ზე.")
+            }
         }
     }
-}
-
-struct ProfileInfoRow: View {
-    let label: String
-    let value: String
     
-    var body: some View {
-        HStack {
-            Text(label)
-                .foregroundColor(.secondary)
-                .font(.caption)
-            Spacer()
-            Text(value)
-                .font(.footnote)
-                .lineLimit(1)
+    private func updateEmailAction() {
+        authManager.updateUserEmail(newEmail: email, password: password) { success, error in
+            if success {
+                showSuccessAlert = true
+            } else {
+                errorMsg = error ?? "შეცდომა განახლებისას"
+            }
         }
     }
 }

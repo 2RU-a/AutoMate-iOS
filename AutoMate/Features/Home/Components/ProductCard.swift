@@ -13,12 +13,13 @@ struct ProductCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 1. სურათის ზონა (მკაცრად განსაზღვრული პროპორციით)
+            // 1. სურათის ზონა
             ZStack(alignment: .topTrailing) {
                 Color(.secondarySystemBackground)
                 
                 Group {
-                    if let url = URL(string: product.imageName), url.scheme != nil {
+                    // შევცვალეთ ლოგიკა: ვცდილობთ URL-ის შექმნას და AsyncImage-ს გამოყენებას
+                    if let url = URL(string: product.imageName), product.imageName.hasPrefix("http") {
                         AsyncImage(url: url) { phase in
                             switch phase {
                             case .empty:
@@ -28,8 +29,8 @@ struct ProductCard: View {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(minWidth: 0, maxWidth: .infinity) // აიძულებს სიგანის შევსებას
-                                    .frame(height: 140) // მკაცრი სიმაღლე
+                                    .frame(minWidth: 0, maxWidth: .infinity)
+                                    .frame(height: 140)
                                     .clipped()
                             case .failure:
                                 fallbackImage
@@ -38,8 +39,22 @@ struct ProductCard: View {
                             }
                         }
                     } else {
-                        fallbackImage
+                        // თუ არ არის URL, ვცდილობთ გამოვიყენოთ როგორც Asset Image (ლოკალური)
+                        Image(product.imageName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 80, height: 80)
+                            .foregroundColor(.gray.opacity(0.3))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color(.secondarySystemBackground))
+                            .onAppear {
+                                // თუ ფოტო მაინც არ ჩანს, აქ fallbackImage გამოჩნდება
+                            }
                     }
+                }
+                
+                if product.isHotDeal {
+                    saleBadge
                 }
                 
                 // ფავორიტის ღილაკი
@@ -49,32 +64,11 @@ struct ProductCard: View {
             .cornerRadius(12)
             
             // 2. ინფორმაციის ზონა
-            VStack(alignment: .leading, spacing: 4) {
-                Text(product.brand)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.blue)
-                    .lineLimit(1)
-                
-                Text(product.name)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    // ფიქსირებული სიმაღლე ტექსტისთვის, რომ 1-ხაზიანი და 2-ხაზიანი სახელები ერთნაირად იჯდეს
-                    .frame(height: 34, alignment: .topLeading)
-                
-                Text(product.formattedPrice)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.primary)
-                    .padding(.top, 2)
-            }
-            .padding(.top, 8)
-            .padding(.horizontal, 4)
+            infoSection
             
             Spacer(minLength: 0)
         }
         .padding(8)
-        // აი ეს ბლოკავს მთლიან ქარდს
         .frame(maxWidth: .infinity)
         .frame(height: 235)
         .background(Color(.systemBackground))
@@ -82,7 +76,43 @@ struct ProductCard: View {
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
     
-    // დამხმარე კომპონენტები
+    // MARK: - კომპონენტები
+    
+    private var infoSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(product.brand)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.blue)
+                .lineLimit(1)
+            
+            Text(product.name)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .frame(height: 34, alignment: .topLeading)
+            
+            Text(product.formattedPrice)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(.primary)
+                .padding(.top, 2)
+        }
+        .padding(.top, 8)
+        .padding(.horizontal, 4)
+    }
+    
+    private var saleBadge: some View {
+        Text("HOT")
+            .font(.system(size: 9, weight: .bold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(Color.red)
+            .cornerRadius(4)
+            .padding(8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
     private var favoriteButtonSection: some View {
         Button {
             withAnimation(.spring()) {
@@ -101,35 +131,40 @@ struct ProductCard: View {
     }
     
     private var fallbackImage: some View {
-        Image(systemName: product.imageName.contains("/") ? "photo" : product.imageName)
-            .font(.system(size: 30))
-            .foregroundColor(.gray.opacity(0.5))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack {
+            Image(systemName: "photo")
+                .font(.system(size: 30))
+                .foregroundColor(.gray.opacity(0.4))
+            Text("სურათი მიუწვდომელია")
+                .font(.system(size: 8))
+                .foregroundColor(.gray.opacity(0.4))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-//Preview
-/*#Preview {
-    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())]) {
-        ProductCard(product: Product(
-            id: "1",
-            name: "Edge 5W-30",
-            brand: "Castrol",
-            description: "Premium oil",
-            price: 145.0,
-            imageName: "drop.fill",
-            categoryId: "5"
-        ))
-        
-        ProductCard(product: Product(
-            id: "2",
-            name: "ამნთები სანთელი",
-            brand: "NGK",
-            description: "Iridium",
-            price: 25.0,
-            imageName: "https://www.ngkntk.com/fileadmin/_processed_/csm_NGK_Laser_Iridium_Packaging_01_386x260_6d9e0f3e6a.png",
-            categoryId: "1"
-        ))
-    }
-    .padding()
-}*/
+
+//#Preview {
+//    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())]) {
+//        ProductCard(product: Product(
+//            id: "1",
+//            name: "Edge 5W-30",
+//            brand: "Castrol",
+//            description: "Premium oil",
+//            price: 145.0,
+//            isHotDeal: true, imageName: "drop.fill",
+//            categoryId: "5"
+//        ))
+//        
+//        ProductCard(product: Product(
+//            id: "2",
+//            name: "ამნთები სანთელი",
+//            brand: "NGK",
+//            description: "Iridium",
+//            price: 25.0,
+//            isHotDeal: false, imageName: "https://www.ngkntk.com/fileadmin/_processed_/csm_NGK_Laser_Iridium_Packaging_01_386x260_6d9e0f3e6a.png",
+//            categoryId: "1"
+//        ))
+//    }
+//    .padding()
+//}

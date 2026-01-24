@@ -48,7 +48,7 @@ struct VehicleManagementView: View {
             }
         }
         .sheet(isPresented: $showAddCar) {
-            // ✅ აქ გადაეცემა nil, რადგან ახალს ვამატებთ
+            // აქ გადაეცემა nil, რადგან ახალს ვამატებთ
             AddCarView(carToEdit: nil)
         }
         .alert("ავტომობილის წაშლა", isPresented: $showDeleteAlert) {

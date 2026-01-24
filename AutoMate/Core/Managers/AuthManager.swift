@@ -7,76 +7,153 @@
 
 import Foundation
 import FirebaseAuth
+import FirebaseFirestore
 import Combine
 
 class AuthManager: ObservableObject {
     static let shared = AuthManager()
+    private var db = Firestore.firestore()
+    
     @Published var userSession: FirebaseAuth.User?
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
-    var isAnonymous: Bool {
-            return userSession?.isAnonymous ?? true
-        }
+    // პროფილისთვის საჭირო მონაცემები
+    @Published var userEmail: String = ""
+    @Published var userName: String = ""
     
+    var isAnonymous: Bool {
+        return userSession?.isAnonymous ?? true
+    }
     
     init() {
         self.userSession = Auth.auth().currentUser
+        updateUserInfo()
     }
     
-    func login(withEmail email: String, password: String) {
-        Auth.auth().signIn(withEmail: email, password: password) { result, error in
-            if let error = error {
-                self.errorMessage = error.localizedDescription
-                return
+    // მონაცემების განახლების შიდა ფუნქცია
+    func updateUserInfo() {
+        if let user = Auth.auth().currentUser {
+            if user.isAnonymous {
+                self.userEmail = "სტუმარი"
+                self.userName = "სტუმარი"
+            } else {
+                self.userEmail = user.email ?? ""
+                // თუ displayName ცარიელია (მაგალითად ახალი რეგისტრაციისას),
+                // ვაჩვენებთ "მომხმარებელს", სანამ Firebase-დან მოვა განახლება.
+                self.userName = user.displayName ?? "მომხმარებელი"
             }
-            self.userSession = result?.user
-            self.errorMessage = nil
+        } else {
+            self.userEmail = ""
+            self.userName = ""
+        }
+    }
+    
+    // MARK: - ავტორიზაციის ფუნქციები
+    
+    func login(withEmail email: String, password: String) {
+        self.isLoading = true
+        Auth.auth().signIn(withEmail: email, password: password) { result, error in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                if let error = error {
+                    self.errorMessage = error.localizedDescription
+                    return
+                }
+                self.userSession = result?.user
+                self.updateUserInfo()
+                self.errorMessage = nil
+            }
         }
     }
     
     func register(withEmail email: String, password: String, fullName: String) {
+        self.isLoading = true
         Auth.auth().createUser(withEmail: email, password: password) { result, error in
             if let error = error {
-                print("DEBUG: Registration error - \(error.localizedDescription)")
-                self.errorMessage = error.localizedDescription
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.errorMessage = error.localizedDescription
+                }
                 return
             }
             
-            // მომხმარებლის სახელის შენახვა პროფილში
-            let changeRequest = result?.user.createProfileChangeRequest()
-            changeRequest?.displayName = fullName
+            guard let user = result?.user else { return }
             
-            changeRequest?.commitChanges { error in
-                if let error = error {
-                    print("DEBUG: Error saving display name - \(error.localizedDescription)")
-                }
+            // 1. პროფილის განახლება (Display Name)
+            let changeRequest = user.createProfileChangeRequest()
+            changeRequest.displayName = fullName
+            
+            changeRequest.commitChanges { error in
+                // 2. Firestore-ში მომხმარებლის შექმნა
+                let userData: [String: Any] = [
+                    "uid": user.uid,
+                    "email": email,
+                    "fullName": fullName,
+                    "createdAt": FieldValue.serverTimestamp()
+                ]
                 
-                // სესიის განახლება სახელის შენახვის შემდეგ
-                DispatchQueue.main.async {
-                    self.userSession = Auth.auth().currentUser
-                    self.errorMessage = nil
+                self.db.collection("users").document(user.uid).setData(userData) { error in
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        // მყისიერად ვაახლებთ მნიშვნელობას, რომ UI-ში გამოჩნდეს
+                        self.userName = fullName
+                        self.userSession = Auth.auth().currentUser
+                        self.updateUserInfo()
+                        self.errorMessage = nil
+                    }
                 }
             }
         }
     }
     
     func signInAnonymously() {
+        self.isLoading = true
         Auth.auth().signInAnonymously { result, error in
-            if let error = error {
-                print("DEBUG: Anonymous Sign-In Error: \(error.localizedDescription)")
-                return
+            DispatchQueue.main.async {
+                self.isLoading = false
+                if let error = error {
+                    self.errorMessage = error.localizedDescription
+                    return
+                }
+                self.userSession = result?.user
+                self.updateUserInfo()
             }
-            self.userSession = result?.user
         }
     }
     
     func signOut() {
         do {
             try Auth.auth().signOut()
-            self.userSession = nil
+            DispatchQueue.main.async {
+                self.userSession = nil
+                self.updateUserInfo()
+            }
         } catch {
             print("DEBUG: Error signing out - \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - იმეილის განახლება
+    
+    func updateUserEmail(newEmail: String, password: String, completion: @escaping (Bool, String?) -> Void) {
+        guard let user = Auth.auth().currentUser, let currentEmail = user.email else { return }
+        
+        let credential = EmailAuthProvider.credential(withEmail: currentEmail, password: password)
+        
+        user.reauthenticate(with: credential) { _, error in
+            if let error = error {
+                completion(false, error.localizedDescription)
+                return
+            }
+            
+            user.sendEmailVerification(beforeUpdatingEmail: newEmail) { error in
+                if let error = error {
+                    completion(false, error.localizedDescription)
+                } else {
+                    completion(true, nil)
+                }
+            }
         }
     }
 }
