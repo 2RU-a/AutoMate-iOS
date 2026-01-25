@@ -102,8 +102,11 @@ struct ProfileView: View {
 
                 // 6. გასვლა
                 Section {
-                    Button(role: .destructive, action: { authManager.signOut() }) {
-                        Label("გასვლა", systemImage: "arrow.right.circle")
+                    Button(role: authManager.isAnonymous ? .none : .destructive, action: { authManager.signOut() }) {
+                        Label(
+                            authManager.isAnonymous ? "შესვლა / რეგისტრაცია" : "გასვლა",
+                            systemImage: authManager.isAnonymous ? "arrow.left.circle" : "arrow.right.circle"
+                        )
                     }
                 }
             }
