@@ -18,7 +18,6 @@ class AuthManager: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
-    // პროფილისთვის საჭირო მონაცემები
     @Published var userEmail: String = ""
     @Published var userName: String = ""
     
@@ -29,9 +28,13 @@ class AuthManager: ObservableObject {
     init() {
         self.userSession = Auth.auth().currentUser
         updateUserInfo()
+        // აპლიკაციის ჩართვისას
+        if userSession != nil {
+            CartManager.shared.setupListeners()
+            AddressManager.shared.fetchAddresses()
+        }
     }
     
-    // მონაცემების განახლების შიდა ფუნქცია
     func updateUserInfo() {
         if let user = Auth.auth().currentUser {
             if user.isAnonymous {
@@ -39,17 +42,16 @@ class AuthManager: ObservableObject {
                 self.userName = "სტუმარი"
             } else {
                 self.userEmail = user.email ?? ""
-                // თუ displayName ცარიელია (მაგალითად ახალი რეგისტრაციისას),
-                // ვაჩვენებთ "მომხმარებელს", სანამ Firebase-დან მოვა განახლება.
                 self.userName = user.displayName ?? "მომხმარებელი"
+                
+                CartManager.shared.setupListeners()
+                AddressManager.shared.fetchAddresses()
             }
         } else {
             self.userEmail = ""
             self.userName = ""
         }
     }
-    
-    // MARK: - ავტორიზაციის ფუნქციები
     
     func login(withEmail email: String, password: String) {
         self.isLoading = true
@@ -62,6 +64,9 @@ class AuthManager: ObservableObject {
                 }
                 self.userSession = result?.user
                 self.updateUserInfo()
+                // ლოგინის მერე ლისენერების ჩართვა
+                CartManager.shared.setupListeners()
+                AddressManager.shared.fetchAddresses()
                 self.errorMessage = nil
             }
         }
@@ -79,13 +84,10 @@ class AuthManager: ObservableObject {
             }
             
             guard let user = result?.user else { return }
-            
-            // 1. პროფილის განახლება (Display Name)
             let changeRequest = user.createProfileChangeRequest()
             changeRequest.displayName = fullName
             
             changeRequest.commitChanges { error in
-                // 2. Firestore-ში მომხმარებლის შექმნა
                 let userData: [String: Any] = [
                     "uid": user.uid,
                     "email": email,
@@ -96,10 +98,12 @@ class AuthManager: ObservableObject {
                 self.db.collection("users").document(user.uid).setData(userData) { error in
                     DispatchQueue.main.async {
                         self.isLoading = false
-                        // მყისიერად ვაახლებთ მნიშვნელობას, რომ UI-ში გამოჩნდეს
                         self.userName = fullName
                         self.userSession = Auth.auth().currentUser
                         self.updateUserInfo()
+                        // რეგისტრაციის მერე ლისენერების ჩართვა
+                        CartManager.shared.setupListeners()
+                        AddressManager.shared.fetchAddresses()
                         self.errorMessage = nil
                     }
                 }
@@ -128,17 +132,17 @@ class AuthManager: ObservableObject {
             DispatchQueue.main.async {
                 self.userSession = nil
                 self.updateUserInfo()
+                // მონაცემების გასუფთავება
+                CartManager.shared.items = []
+                AddressManager.shared.addresses = []
             }
         } catch {
             print("DEBUG: Error signing out - \(error.localizedDescription)")
         }
     }
     
-    // MARK: - იმეილის განახლება
-    
     func updateUserEmail(newEmail: String, password: String, completion: @escaping (Bool, String?) -> Void) {
         guard let user = Auth.auth().currentUser, let currentEmail = user.email else { return }
-        
         let credential = EmailAuthProvider.credential(withEmail: currentEmail, password: password)
         
         user.reauthenticate(with: credential) { _, error in
@@ -146,7 +150,6 @@ class AuthManager: ObservableObject {
                 completion(false, error.localizedDescription)
                 return
             }
-            
             user.sendEmailVerification(beforeUpdatingEmail: newEmail) { error in
                 if let error = error {
                     completion(false, error.localizedDescription)

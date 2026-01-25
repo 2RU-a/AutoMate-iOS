@@ -9,7 +9,7 @@ import SwiftUI
 import MapKit
 
 struct AddressManagementView: View {
-    @StateObject private var addressManager = AddressManager.shared
+    @StateObject var addressManager = AddressManager.shared
     @State private var isShowingAddAddress = false
     
     // რუკის საწყისი წერტილი

@@ -42,6 +42,7 @@ struct CartView: View {
                     if !cartManager.items.isEmpty {
                         Section(header: Text("ნივთები კალათაში")) {
                             ForEach(cartManager.items) { product in
+                                Text(product.name) // დროებითი ტექსტი შესამოწმებლად
                                 CartItemRow(product: product)
                             }
                             .onDelete(perform: deleteItems)

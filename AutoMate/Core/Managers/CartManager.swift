@@ -8,24 +8,76 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseFirestore
+import FirebaseAuth
+
 
 class CartManager: ObservableObject {
     static let shared = CartManager()
+    private let db = Firestore.firestore()
     
-    @Published var items: [Product] = [] {
-        didSet { saveCart() }
-    }
+    @Published var items: [Product] = []
+    @Published var orderHistory: [Order] = []
+    @Published var isLoading: Bool = false
     
-    @Published var orderHistory: [Order] = [] {
-        didSet { saveOrders() }
-    }
-    
-    // შენახვის გასაღებები (Keys)
-    private let cartKey = "saved_cart_items"
-    private let ordersKey = "saved_order_history"
+    private var cartListener: ListenerRegistration?
+    private var ordersListener: ListenerRegistration?
     
     init() {
-        loadData()
+        if Auth.auth().currentUser != nil {
+            setupListeners()
+        }
+    }
+    
+    // MARK: - Firebase Listeners
+    
+    func setupListeners() {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("DEBUG: CartManager - No user logged in")
+            return
+        }
+        
+        cartListener?.remove()
+        cartListener = db.collection("carts").document(uid)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let data = snapshot?.data(),
+                      let itemsArray = data["items"] as? [[String: Any]] else {
+                    self?.items = []
+                    return
+                }
+                
+                let decodedItems = itemsArray.compactMap { dict -> Product? in
+                    return Product(
+                        id: dict["id"] as? String ?? "",
+                        name: dict["name"] as? String ?? "",
+                        brand: dict["brand"] as? String ?? "",
+                        description: dict["description"] as? String ?? "",
+                        price: dict["price"] as? Double ?? 0.0,
+                        isHotDeal: dict["isHotDeal"] as? Bool ?? false, // 👈 გადმოვიდა წინ
+                        imageName: dict["imageName"] as? String ?? "",
+                        categoryId: dict["categoryId"] as? String ?? ""
+                    )
+                }
+                
+                DispatchQueue.main.async {
+                    self?.items = decodedItems
+                }
+            }
+        
+        ordersListener?.remove()
+        ordersListener = db.collection("users").document(uid).collection("orders")
+            .order(by: "date", descending: true)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let documents = snapshot?.documents else { return }
+                
+                let fetchedOrders = documents.compactMap { doc -> Order? in
+                    try? doc.data(as: Order.self)
+                }
+                
+                DispatchQueue.main.async {
+                    self?.orderHistory = fetchedOrders
+                }
+            }
     }
     
     // MARK: - გამოთვლილი ცვლადები
@@ -33,21 +85,60 @@ class CartManager: ObservableObject {
         items.reduce(0) { $0 + $1.price }
     }
     
-    // MARK: - ფუნქციები
+    // MARK: - კალათის ფუნქციები
+    
     func addToCart(product: Product) {
-        items.append(product)
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        var currentItems = items
+        currentItems.append(product)
+        
+        updateFirebaseCart(uid: uid, newItems: currentItems)
     }
     
     func removeFromCart(product: Product) {
-        items.removeAll { $0.id == product.id }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        var currentItems = items
+        if let index = currentItems.firstIndex(where: { $0.id == product.id }) {
+            currentItems.remove(at: index)
+            updateFirebaseCart(uid: uid, newItems: currentItems)
+        }
     }
     
     func clearCart() {
-        items = []
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("carts").document(uid).delete()
     }
     
+    // პროდუქტებს ვაქცევთ Firebase-ისთვის გასაგებ ფორმატში (Dictionary)
+    private func updateFirebaseCart(uid: String, newItems: [Product]) {
+        let itemsData = newItems.map { product -> [String: Any] in
+            return [
+                "id": product.id,
+                "name": product.name,
+                "brand": product.brand,
+                "description": product.description ?? "",
+                "price": product.price,
+                "imageName": product.imageName,
+                "categoryId": product.categoryId,
+                "isHotDeal": product.isHotDeal
+            ]
+        }
+        
+        db.collection("carts").document(uid).setData(["items": itemsData]) { error in
+            if let error = error {
+                print("DEBUG: Firebase Update Error: \(error.localizedDescription)")
+            } else {
+                print("DEBUG: Cart successfully updated in Firebase")
+            }
+        }
+    }
+    
+    // MARK: - Checkout
+    
     func checkout() {
-        guard !items.isEmpty else { return }
+        guard let uid = Auth.auth().currentUser?.uid, !items.isEmpty else { return }
         
         let newOrder = Order(
             id: String(UUID().uuidString.prefix(8).uppercased()),
@@ -57,36 +148,18 @@ class CartManager: ObservableObject {
             status: .pending
         )
         
-        // ჯერ ვამატებთ ისტორიაში, მერე ვასუფთავებთ კალათას
-        orderHistory.insert(newOrder, at: 0)
-        clearCart()
-    }
-    
-    // MARK: - მონაცემთა შენახვა (Persistence)
-    
-    private func saveCart() {
-        if let encoded = try? JSONEncoder().encode(items) {
-            UserDefaults.standard.set(encoded, forKey: cartKey)
+        do {
+            try db.collection("users").document(uid).collection("orders").addDocument(from: newOrder)
+            clearCart()
+        } catch {
+            print("DEBUG: Checkout error - \(error.localizedDescription)")
         }
     }
     
-    private func saveOrders() {
-        if let encoded = try? JSONEncoder().encode(orderHistory) {
-            UserDefaults.standard.set(encoded, forKey: ordersKey)
-        }
-    }
-    
-    private func loadData() {
-        // კალათის ჩატვირთვა
-        if let savedItems = UserDefaults.standard.data(forKey: cartKey),
-           let decodedItems = try? JSONDecoder().decode([Product].self, from: savedItems) {
-            self.items = decodedItems
-        }
-        
-        // ისტორიის ჩატვირთვა
-        if let savedOrders = UserDefaults.standard.data(forKey: ordersKey),
-           let decodedOrders = try? JSONDecoder().decode([Order].self, from: savedOrders) {
-            self.orderHistory = decodedOrders
-        }
+    func signOut() {
+        cartListener?.remove()
+        ordersListener?.remove()
+        items = []
+        orderHistory = []
     }
 }

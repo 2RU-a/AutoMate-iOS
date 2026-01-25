@@ -18,7 +18,8 @@ struct MyCarView: View {
     
     // MARK: - Computed Properties
     private var currentServices: [ServiceRecord] {
-        guard let id = selectedCarID else { return [] }
+        // ვამოწმებთ, რომ ID არ იყოს nil და არ იყოს პლეისჰოლდერის ID
+        guard let id = selectedCarID, id != "add_new_car_placeholder" else { return [] }
         return vehicleManager.services[id] ?? []
     }
     
@@ -132,21 +133,44 @@ struct MyCarView: View {
     }
 
     private var serviceQuickActionSection: some View {
-        Button(action: { if selectedCarID != nil { showAddService = true } }) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("სერვისის დაჯავშნა").font(.headline)
-                    Text("ჩაინიშნე მომავალი ვიზიტი").font(.subheadline).opacity(0.8)
+        VStack(alignment: .leading, spacing: 5) {
+            Button(action: {
+                // დამატებითი დაცვა: მხოლოდ მაშინ ვხსნით, თუ რეალური მანქანაა არჩეული
+                if selectedCarID != nil && selectedCarID != "add_new_car_placeholder" {
+                    showAddService = true
                 }
-                Spacer()
-                Image(systemName: "calendar.badge.plus").font(.title)
+            }) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("სერვისის დაჯავშნა").font(.headline)
+                        Text("ჩაინიშნე მომავალი ვიზიტი").font(.subheadline).opacity(0.8)
+                    }
+                    Spacer()
+                    Image(systemName: "calendar.badge.plus").font(.title)
+                }
+                .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
             }
-            .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
+            // 👇 აქ არის მთავარი ცვლილება: პირობების გაერთიანება
+            .disabled(vehicleManager.cars.isEmpty || selectedCarID == nil || selectedCarID == "add_new_car_placeholder")
+            .opacity((vehicleManager.cars.isEmpty || selectedCarID == nil || selectedCarID == "add_new_car_placeholder") ? 0.6 : 1.0)
+            
+            // ინფორმაციული ტექსტები
+            if vehicleManager.cars.isEmpty {
+                Text("სერვისის დასაჯავშნად ჯერ დაამატეთ ავტომობილი")
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.leading, 5)
+            } else if selectedCarID == nil || selectedCarID == "add_new_car_placeholder" {
+                Text("აირჩიეთ კონკრეტული ავტომობილი სერვისის დასაჯავშნად")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .padding(.leading, 5)
+            }
         }
-        .disabled(vehicleManager.cars.isEmpty)
-        .opacity(vehicleManager.cars.isEmpty ? 0.6 : 1.0)
         .sheet(isPresented: $showAddService) {
-            if let carId = selectedCarID { AddServiceView(carId: carId) }
+            if let carId = selectedCarID, carId != "add_new_car_placeholder" {
+                AddServiceView(carId: carId)
+            }
         }
     }
 

@@ -95,7 +95,7 @@ struct ProductDetailView: View {
                 Divider()
                 Button {
                     withAnimation(.spring()) {
-                        cartManager.addToCart(product: product)
+                        CartManager.shared.addToCart(product: product)
                     }
                 } label: {
                     HStack {

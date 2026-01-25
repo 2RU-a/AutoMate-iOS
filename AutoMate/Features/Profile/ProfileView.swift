@@ -18,7 +18,6 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             List {
-                // 1. მომხმარებლის მთავარი ინფორმაცია
                 Section {
                     HStack(spacing: 15) {
                         Image(systemName: "person.circle.fill")
@@ -27,15 +26,15 @@ struct ProfileView: View {
                             .foregroundColor(.blue)
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            // 1. პირდაპირ ვიყენებთ მნიშვნელობას String-ად
                             Text(authManager.userName.isEmpty ? "მომხმარებელი" : authManager.userName)
                                 .font(.headline)
                             
                             HStack {
-                                // 2. აქაც პირდაპირი String მნიშვნელობა
                                 Text(authManager.userEmail)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
+                                
+                                Spacer()
                                 
                                 Button {
                                     showEmailEdit = true
@@ -44,7 +43,7 @@ struct ProfileView: View {
                                         .foregroundColor(.blue)
                                         .font(.system(size: 18))
                                 }
-                                .buttonStyle(.plain) // 3. შემოკლებული სინტაქსი
+                                .buttonStyle(.plain)
                             }
                         }                    }
                     .padding(.vertical, 8)
@@ -66,7 +65,10 @@ struct ProfileView: View {
                 // 3. ავტოფარეხი
                 Section("ჩემი ავტომობილები") {
                     NavigationLink(destination: VehicleManagementView()) {
-                        Label("ავტოფარეხი", systemImage: "car.2.fill")
+                        HStack {
+                            Image(systemName: "car.2.fill")
+                            Text("ავტოფარეხი")
+                        }
                     }
                 }
 
