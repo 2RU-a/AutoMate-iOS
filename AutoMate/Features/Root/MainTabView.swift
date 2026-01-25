@@ -12,6 +12,7 @@ struct MainTabView: View {
     // 1. დავაკავშიროთ CartManager-თან, რომ ბეიჯი დინამიური იყოს
     @StateObject private var cartManager = CartManager.shared
     @State private var selectedTab: Tab = .home
+    @StateObject private var lang = LocalizationManager.shared
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -20,7 +21,7 @@ struct MainTabView: View {
                 HomeView()
             }
             .tabItem {
-                Label("მთავარი", systemImage: "house")
+                Label(lang.t("Home"), systemImage: "house")
             }
             .tag(Tab.home)
             
@@ -28,7 +29,8 @@ struct MainTabView: View {
                 FavoritesView()
             }
             .tabItem {
-                Label("ფავორიტი", systemImage: "heart.fill")
+                Label(lang.t("Saved"), systemImage: "heart.fill")
+
             }
             .tag(Tab.favorites)
             
@@ -36,7 +38,7 @@ struct MainTabView: View {
                 MyCarView()
             }
             .tabItem {
-                Label("ჩემი მანქანა", systemImage: "car.fill")
+                Label(lang.t("My car"), systemImage: "car.fill")
             }
             .tag(Tab.mycar)
             
@@ -46,7 +48,7 @@ struct MainTabView: View {
 
             .badge(cartManager.items.count > 0 ? cartManager.items.count : 0)
             .tabItem {
-                Label("კალათა", systemImage: "cart")
+                Label(lang.t("Cart"), systemImage: "cart")
             }
             .tag(Tab.cart)
 
@@ -54,11 +56,13 @@ struct MainTabView: View {
                 ProfileView()
             }
             .tabItem {
-                Label("პროფილი", systemImage: "person.circle")
+                Label(lang.t("Profile"), systemImage: "person.circle")
+
             }
             .tag(Tab.profile)
         }
         .tint(Color.blue)
+        .id(lang.selectedLanguage)
     }
 }
 

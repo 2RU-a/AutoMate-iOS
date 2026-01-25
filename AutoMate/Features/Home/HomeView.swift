@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct HomeView: View {
+    @StateObject private var lang = LocalizationManager.shared
     @StateObject private var viewModel = HomeViewModel()
     
     // MARK: - State Properties
     @State private var searchText = ""
-    @State private var selectedOffer: Offer? = nil // სპეციალური შეთავაზების ასარჩევად
+    @State private var selectedOffer: Offer? = nil
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -21,7 +22,6 @@ struct HomeView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-
             HomeHeaderView()
            
             customSearchBar
@@ -46,7 +46,7 @@ struct HomeView: View {
         }
     }
     
-    // MARK: - Computed Property (ფილტრაციის ლოგიკა მხოლოდ Hot Deals-ზე)
+    // MARK: - Computed Property
     private var filteredProducts: [Product] {
         viewModel.hotDeals.filter { product in
             searchText.isEmpty ||
@@ -61,7 +61,7 @@ struct HomeView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.gray)
-            TextField("მოძებნე ნაწილები...", text: $searchText)
+            TextField(lang.t("Search parts..."), text: $searchText)
                 .autocorrectionDisabled()
         }
         .padding(12)
@@ -75,7 +75,7 @@ struct HomeView: View {
             if filteredProducts.isEmpty {
                 emptyStateView
             } else {
-                Text("ძებნის შედეგები: \(filteredProducts.count)")
+                Text("\(lang.t("Search results")): \(filteredProducts.count)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
@@ -108,7 +108,7 @@ struct HomeView: View {
     
     private var offersSection: some View {
         VStack(alignment: .leading) {
-            Text("სპეციალური შეთავაზებები")
+            Text(lang.t("Special Offers"))
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -118,7 +118,7 @@ struct HomeView: View {
                         OfferCard(offer: offer)
                             .frame(width: 300)
                             .onTapGesture {
-                                selectedOffer = offer // Sheet-ის გამოძახება
+                                selectedOffer = offer
                             }
                     }
                 }
@@ -129,7 +129,7 @@ struct HomeView: View {
     
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("კატეგორიები")
+            Text(lang.t("Categories"))
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -151,7 +151,7 @@ struct HomeView: View {
     
     private var hotDealsSection: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("ცხელი შეთავაზებები")
+            Text(lang.t("Hot Offers"))
                 .font(.headline)
                 .padding(.horizontal)
             
@@ -178,63 +178,64 @@ struct HomeView: View {
             Image(systemName: "cart.badge.questionmark")
                 .font(.system(size: 50))
                 .foregroundColor(.gray)
-            Text("პროდუქტები ვერ მოიძებნა")
+            Text(lang.t("Product not found"))
                 .font(.headline)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 50)
     }
-}
-
-// MARK: - Offer Detail Sheet
-struct OfferDetailSheet: View {
-    let offer: Offer
-    @Environment(\.dismiss) var dismiss
     
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.blue.opacity(0.1))
-                            .frame(height: 200)
+    // MARK: - Offer Detail Sheet (დაამატე ფაილის ბოლოში)
+    struct OfferDetailSheet: View {
+        let offer: Offer
+        @Environment(\.dismiss) var dismiss
+        @StateObject private var lang = LocalizationManager.shared
+        
+        var body: some View {
+            NavigationView {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.blue.opacity(0.1))
+                                .frame(height: 200)
+                            
+                            Image(systemName: "gift.fill")
+                                .font(.system(size: 80))
+                                .foregroundColor(.blue)
+                        }
                         
-                        Image(systemName: "gift.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(offer.title)
+                                .font(.title)
+                                .bold()
+                            
+                            Text(offer.subtitle)
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            Divider()
+                                .padding(.vertical, 10)
+                            
+                            Text(lang.t("Offer details"))
+                                .font(.headline)
+                            
+                            Text(lang.t("offer_description_long"))
+                                .foregroundColor(.secondary)
+                                .lineSpacing(5)
+                        }
+                        .padding(.horizontal)
                     }
-                    
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(offer.title)
-                            .font(.title)
-                            .bold()
-                        
-                        Text(offer.subtitle)
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        Divider()
-                            .padding(.vertical, 10)
-                        
-                        Text("აქციის პირობები:")
-                            .font(.headline)
-                        
-                        Text("მოცემული შეთავაზება მოქმედებს AutoMate-ის ყველა პარტნიორ ფილიალში. ფასდაკლების მისაღებად წარადგინეთ აპლიკაციაში არსებული QR კოდი ან დაუკავშირდით ცხელ ხაზს.")
-                            .foregroundColor(.secondary)
-                            .lineSpacing(5)
+                    .padding(.vertical)
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(lang.t("close")) { dismiss() }
                     }
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("დახურვა") { dismiss() }
                 }
             }
+            .presentationDetents([.large])
         }
-        .presentationDetents([.large])
     }
 }

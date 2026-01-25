@@ -142,29 +142,3 @@ struct ProductCard: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
-
-//#Preview {
-//    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())]) {
-//        ProductCard(product: Product(
-//            id: "1",
-//            name: "Edge 5W-30",
-//            brand: "Castrol",
-//            description: "Premium oil",
-//            price: 145.0,
-//            isHotDeal: true, imageName: "drop.fill",
-//            categoryId: "5"
-//        ))
-//        
-//        ProductCard(product: Product(
-//            id: "2",
-//            name: "ამნთები სანთელი",
-//            brand: "NGK",
-//            description: "Iridium",
-//            price: 25.0,
-//            isHotDeal: false, imageName: //"https://www.ngkntk.com/fileadmin/_processed_/csm_NGK_Laser_Iridium_Packaging_01_386x260_6d9e0f3e6a.png",
-//            categoryId: "1"
-//        ))
-//    }
-//    .padding()
-//}

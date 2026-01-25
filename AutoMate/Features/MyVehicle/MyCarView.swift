@@ -11,6 +11,7 @@ import CoreImage.CIFilterBuiltins
 struct MyCarView: View {
     @StateObject private var vehicleManager = VehicleManager.shared
     @StateObject private var authManager = AuthManager.shared
+    @StateObject private var lang = LocalizationManager.shared
     
     @State private var selectedCarID: String?
     @State private var showAddService = false
@@ -18,7 +19,6 @@ struct MyCarView: View {
     
     // MARK: - Computed Properties
     private var currentServices: [ServiceRecord] {
-        // ვამოწმებთ, რომ ID არ იყოს nil და არ იყოს პლეისჰოლდერის ID
         guard let id = selectedCarID, id != "add_new_car_placeholder" else { return [] }
         return vehicleManager.services[id] ?? []
     }
@@ -43,14 +43,14 @@ struct MyCarView: View {
             Group {
                 if authManager.isAnonymous {
                     GuestPlaceholderView(
-                        title: "თქვენი ავტო-ფარეხი",
-                        message: "მანქანების დასამატებლად და სერვისების სამართავად საჭიროა გაიაროთ რეგისტრაცია"
+                        title: lang.t("garage_title"), // "თქვენი ავტო-ფარეხი"
+                        message: lang.t("garage_guest_message") // "მანქანების დასამატებლად..."
                     )
                 } else {
                     mainDashboardContent
                 }
             }
-            .navigationTitle("ჩემი ავტომობილი")
+            .navigationTitle(lang.t("My car")) // "ჩემი ავტომობილი"
             .background(Color(.systemGroupedBackground))
             .onAppear {
                 if selectedCarID == nil {
@@ -76,14 +76,12 @@ struct MyCarView: View {
                         maintenanceDueSection(for: service)
                     }
                     
-                    // დაგეგმილი სერვისები
                     if !upcomingServices.isEmpty {
                         upcomingServicesSection(services: upcomingServices)
                     } else if !vehicleManager.cars.isEmpty && completedServices.isEmpty {
                         noServicesSection
                     }
                     
-                    // სერვისების ისტორია
                     if !completedServices.isEmpty {
                         historySection(services: completedServices)
                     }
@@ -124,7 +122,7 @@ struct MyCarView: View {
         Button(action: { showAddCar = true }) {
             VStack(spacing: 15) {
                 Image(systemName: "plus.circle.fill").font(.system(size: 60))
-                Text("ახალი ავტომობილის დამატება").font(.headline)
+                Text(lang.t("add_new_car")).font(.headline) // "ახალი ავტომობილის დამატება"
             }
             .frame(maxWidth: .infinity).frame(height: 200)
             .background(RoundedRectangle(cornerRadius: 25).stroke(style: StrokeStyle(lineWidth: 2, dash: [10])).foregroundColor(.blue.opacity(0.5)).background(Color.blue.opacity(0.05)))
@@ -135,33 +133,30 @@ struct MyCarView: View {
     private var serviceQuickActionSection: some View {
         VStack(alignment: .leading, spacing: 5) {
             Button(action: {
-                // დამატებითი დაცვა: მხოლოდ მაშინ ვხსნით, თუ რეალური მანქანაა არჩეული
                 if selectedCarID != nil && selectedCarID != "add_new_car_placeholder" {
                     showAddService = true
                 }
             }) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("სერვისის დაჯავშნა").font(.headline)
-                        Text("ჩაინიშნე მომავალი ვიზიტი").font(.subheadline).opacity(0.8)
+                        Text(lang.t("Book Service")).font(.headline) // "სერვისის დაჯავშნა"
+                        Text(lang.t("book_service_subtitle")).font(.subheadline).opacity(0.8) // "ჩაინიშნე მომავალი ვიზიტი"
                     }
                     Spacer()
                     Image(systemName: "calendar.badge.plus").font(.title)
                 }
                 .padding().background(Color.blue).foregroundColor(.white).cornerRadius(16)
             }
-            // 👇 აქ არის მთავარი ცვლილება: პირობების გაერთიანება
             .disabled(vehicleManager.cars.isEmpty || selectedCarID == nil || selectedCarID == "add_new_car_placeholder")
             .opacity((vehicleManager.cars.isEmpty || selectedCarID == nil || selectedCarID == "add_new_car_placeholder") ? 0.6 : 1.0)
             
-            // ინფორმაციული ტექსტები
             if vehicleManager.cars.isEmpty {
-                Text("სერვისის დასაჯავშნად ჯერ დაამატეთ ავტომობილი")
+                Text(lang.t("add_car_first_hint")) // "სერვისის დასაჯავშნად ჯერ დაამატეთ ავტომობილი"
                     .font(.caption)
                     .foregroundColor(.red)
                     .padding(.leading, 5)
             } else if selectedCarID == nil || selectedCarID == "add_new_car_placeholder" {
-                Text("აირჩიეთ კონკრეტული ავტომობილი სერვისის დასაჯავშნად")
+                Text(lang.t("select_car_hint")) // "აირჩიეთ კონკრეტული ავტომობილი..."
                     .font(.caption)
                     .foregroundColor(.orange)
                     .padding(.leading, 5)
@@ -176,7 +171,7 @@ struct MyCarView: View {
 
     private func upcomingServicesSection(services: [ServiceRecord]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("დაგეგმილი სერვისები").font(.title3).fontWeight(.bold)
+            Text(lang.t("Upcoming Services")).font(.title3).fontWeight(.bold) // "დაგეგმილი სერვისები"
             VStack(spacing: 1) {
                 ForEach(services) { service in
                     NavigationLink(destination: ServiceDetailView(service: service, carId: selectedCarID ?? "")) {
@@ -192,7 +187,7 @@ struct MyCarView: View {
     
     private func historySection(services: [ServiceRecord]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("სერვისების ისტორია").font(.title3).fontWeight(.bold)
+            Text(lang.t("service_history")).font(.title3).fontWeight(.bold) // "სერვისების ისტორია"
             VStack(spacing: 1) {
                 ForEach(services) { service in
                     NavigationLink(destination: ServiceDetailView(service: service, carId: selectedCarID ?? "")) {
@@ -221,12 +216,12 @@ struct MyCarView: View {
 
     private func maintenanceDueSection(for service: ServiceRecord) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("ყურადღება მისაქცევი").font(.title3).fontWeight(.bold)
+            Text(lang.t("Attention Required")).font(.title3).fontWeight(.bold) // "ყურადღება მისაქცევი"
             HStack {
                 Circle().fill(.red).frame(width: 10, height: 10)
                 VStack(alignment: .leading) {
                     Text(service.title).fontWeight(.semibold)
-                    Text("ვადა გადაცილებულია: \(service.date.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundColor(.secondary)
+                    Text("\(lang.t("Overdue")): \(service.date.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundColor(.secondary)
                 }
                 Spacer()
                 Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
@@ -236,7 +231,7 @@ struct MyCarView: View {
     }
 
     private var noServicesSection: some View {
-        Text("დაგეგმილი სერვისები არ გაქვთ").font(.subheadline).foregroundColor(.secondary).frame(maxWidth: .infinity).padding()
+        Text(lang.t("no_upcoming_services")).font(.subheadline).foregroundColor(.secondary).frame(maxWidth: .infinity).padding()
     }
 }
 
@@ -245,6 +240,7 @@ struct CarDashboardCard: View {
     let car: MyCar
     @State private var showQRSheet = false
     private let context = CIContext()
+    @StateObject private var lang = LocalizationManager.shared // 👈 დამატებულია თარგმანისთვის
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -268,7 +264,7 @@ struct CarDashboardCard: View {
                     Button { showQRSheet = true } label: {
                         VStack(spacing: 8) {
                             Image(uiImage: qrImage).interpolation(.none).resizable().frame(width: 75, height: 75).padding(6).background(Color.white).cornerRadius(12)
-                            Text("QR კოდი").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
+                            Text(lang.t("QR კოდი")).font(.system(size: 10, weight: .bold)).foregroundColor(.white)
                         }
                     }
                 }
@@ -298,6 +294,7 @@ struct CarDashboardCard: View {
 struct QRDetailView: View {
     let car: MyCar
     @Environment(\.dismiss) var dismiss
+    @StateObject private var lang = LocalizationManager.shared // 👈 დამატებულია თარგმანისთვის
     
     var body: some View {
         VStack(spacing: 30) {
@@ -311,7 +308,7 @@ struct QRDetailView: View {
                 }
             }
             Spacer()
-            Button("დახურვა") { dismiss() }.buttonStyle(.borderedProminent).padding(.bottom, 20)
+            Button(lang.t("close")) { dismiss() }.buttonStyle(.borderedProminent).padding(.bottom, 20)
         }
         .padding()
     }

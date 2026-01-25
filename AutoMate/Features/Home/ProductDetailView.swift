@@ -100,7 +100,7 @@ struct ProductDetailView: View {
                 } label: {
                     HStack {
                         Image(systemName: "cart.badge.plus")
-                        Text("კალათაში დამატება")
+                        Text(lang.t("Add to Cart"))
                             .fontWeight(.bold)
                     }
                     .frame(maxWidth: .infinity)

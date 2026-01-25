@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FavoritesView: View {
+    @StateObject private var lang = LocalizationManager.shared
     @StateObject private var favoritesManager = FavoritesManager.shared
     
     var body: some View {
@@ -23,7 +24,6 @@ struct FavoritesView: View {
                             }
                         }
                         .onDelete { indexSet in
-                            // სლაიდით წაშლის შესაძლებლობა
                             indexSet.forEach { index in
                                 let product = favoritesManager.favoriteProducts[index]
                                 favoritesManager.toggleFavorite(product)
@@ -33,7 +33,7 @@ struct FavoritesView: View {
                     .listStyle(PlainListStyle())
                 }
             }
-            .navigationTitle("ფავორიტები")
+            .navigationTitle(lang.t("Saved"))
         }
     }
     
@@ -42,7 +42,7 @@ struct FavoritesView: View {
             Image(systemName: "heart.slash")
                 .font(.system(size: 80))
                 .foregroundColor(.gray.opacity(0.4))
-            Text("ფავორიტების სია ცარიელია")
+            Text(lang.t("No favorites"))
                 .font(.headline)
                 .foregroundColor(.secondary)
         }
@@ -50,7 +50,6 @@ struct FavoritesView: View {
     
     private func favoriteRow(product: Product) -> some View {
         HStack(spacing: 15) {
-            // სურათი Firebase-იდან
             AsyncImage(url: URL(string: product.imageName)) { image in
                 image
                     .resizable()
