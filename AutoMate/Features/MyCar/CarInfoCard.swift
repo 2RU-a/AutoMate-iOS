@@ -142,7 +142,7 @@ struct QRCodeSheetView: View {
     }
 }
 
-#Preview {
-    CarInfoCard(car: Car(id: "1", brand: "Mercedes-Benz", model: "G-Class", year: 2023, vin: "WDB1234567890", currentMileage: 12500, mileageUnit: .kilometers))
-        .padding()
-}
+//#Preview {
+//    CarInfoCard(car: Car(id: "1", brand: "Mercedes-Benz", model: "G-Class", year: 2023, vin: "WDB1234567890", currentMileage: 12500, mileageUnit: .kilometers))
+//        .padding()
+//}

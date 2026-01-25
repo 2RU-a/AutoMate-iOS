@@ -38,9 +38,3 @@ struct CategoryItemView: View {
     }
 }
 
-//#Preview {
-//    CategoryItemView(category: Category(id: "1", name: "ძრავი", iconName: ""))
-//        .frame(width: 100)
-//        .padding()
-//    
-//}

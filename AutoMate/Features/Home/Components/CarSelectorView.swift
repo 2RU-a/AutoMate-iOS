@@ -13,6 +13,3 @@ struct CarSelectorView: View {
     }
 }
 
-#Preview {
-    CarSelectorView()
-}

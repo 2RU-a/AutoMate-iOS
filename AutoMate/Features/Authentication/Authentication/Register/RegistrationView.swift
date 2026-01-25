@@ -150,7 +150,3 @@ struct RegistrationView: View {
         .cornerRadius(12)
     }
 }
-
-#Preview {
-    RegistrationView()
-}

@@ -117,8 +117,8 @@ struct VehicleManagementView: View {
 }
 
 // MARK: - Preview
-#Preview {
-    NavigationStack {
-        VehicleManagementView()
-    }
-}
+//#Preview {
+//    NavigationStack {
+//        VehicleManagementView()
+//    }
+//}

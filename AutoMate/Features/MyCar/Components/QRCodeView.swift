@@ -32,7 +32,7 @@ struct QRCodeView: View {
     }
 }
 
-#Preview {
-    // სატესტო VIN კოდი
-    QRCodeView(vinCode: "ABC123456789")
-}
+//#Preview {
+//    // სატესტო VIN კოდი
+//    QRCodeView(vinCode: "ABC123456789")
+//}

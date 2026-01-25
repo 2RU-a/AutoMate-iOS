@@ -38,13 +38,18 @@ class CartManager: ObservableObject {
         }
         
         cartListener?.remove()
-        cartListener = db.collection("carts").document(uid)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let data = snapshot?.data(),
-                      let itemsArray = data["items"] as? [[String: Any]] else {
-                    self?.items = []
-                    return
-                }
+        cartListener = db.collection("users").document(uid).collection("cart").document("current")            .addSnapshotListener { [weak self] snapshot, error in
+            if let error = error {
+                        print("DEBUG: Cart Listener Error: \(error.localizedDescription)")
+                        return
+                    }
+                    
+                    guard let data = snapshot?.data(),
+                          let itemsArray = data["items"] as? [[String: Any]] else {
+                        print("DEBUG: კალათის დოკუმენტი არ არსებობს ან ცარიელია") // ეს დაგვეხმარება დებაგში
+                        self?.items = []
+                        return
+                    }
                 
                 let decodedItems = itemsArray.compactMap { dict -> Product? in
                     return Product(
@@ -88,6 +93,7 @@ class CartManager: ObservableObject {
     // MARK: - კალათის ფუნქციები
     
     func addToCart(product: Product) {
+        print("DEBUG: ვამატებ პროდუქტს: \(product.name)")
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         var currentItems = items
@@ -108,10 +114,9 @@ class CartManager: ObservableObject {
     
     func clearCart() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        db.collection("carts").document(uid).delete()
+        db.collection("users").document(uid).collection("cart").document("current").delete()
     }
     
-    // პროდუქტებს ვაქცევთ Firebase-ისთვის გასაგებ ფორმატში (Dictionary)
     private func updateFirebaseCart(uid: String, newItems: [Product]) {
         let itemsData = newItems.map { product -> [String: Any] in
             return [
@@ -126,7 +131,8 @@ class CartManager: ObservableObject {
             ]
         }
         
-        db.collection("carts").document(uid).setData(["items": itemsData]) { error in
+        db.collection("users").document(uid).collection("cart").document("current")
+            .setData(["items": itemsData], merge: true) { error in
             if let error = error {
                 print("DEBUG: Firebase Update Error: \(error.localizedDescription)")
             } else {

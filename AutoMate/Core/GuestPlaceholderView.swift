@@ -64,8 +64,8 @@ struct GuestPlaceholderView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        GuestPlaceholderView(title: "წვდომა შეზღუდულია", message: "სერვისების მისაღებად საჭიროა რეგისტრაცია")
-    }
-}
+//#Preview {
+//    NavigationStack {
+//        GuestPlaceholderView(title: "წვდომა შეზღუდულია", message: "სერვისების მისაღებად საჭიროა რეგისტრაცია")
+//    }
+//}

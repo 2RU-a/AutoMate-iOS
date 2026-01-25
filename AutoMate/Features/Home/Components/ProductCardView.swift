@@ -13,6 +13,6 @@ struct ProductCardView: View {
     }
 }
 
-#Preview {
-    ProductCardView()
-}
+//#Preview {
+//    ProductCardView()
+//}

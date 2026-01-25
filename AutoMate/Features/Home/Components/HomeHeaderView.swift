@@ -40,6 +40,3 @@ struct HomeHeaderView: View {
     }
 }
 
-#Preview {
-    HomeHeaderView()
-}

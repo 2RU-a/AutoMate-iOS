@@ -56,9 +56,9 @@ struct CarDetailView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        // Mock მონაცემებით ტესტირება
-        CarDetailView(car: Car(id: "1", brand: "Toyota", model: "Prius", year: 2017, vin: "123", currentMileage: 100000, mileageUnit: .kilometers))
-    }
-}
+//#Preview {
+//    NavigationStack {
+//        // Mock მონაცემებით ტესტირება
+//        CarDetailView(car: Car(id: "1", brand: "Toyota", model: "Prius", year: 2017, vin: "123", currentMileage: 100000, mileageUnit: .kilometers))
+//    }
+//}

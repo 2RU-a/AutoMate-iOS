@@ -162,7 +162,7 @@ struct ProductCard: View {
 //            brand: "NGK",
 //            description: "Iridium",
 //            price: 25.0,
-//            isHotDeal: false, imageName: "https://www.ngkntk.com/fileadmin/_processed_/csm_NGK_Laser_Iridium_Packaging_01_386x260_6d9e0f3e6a.png",
+//            isHotDeal: false, imageName: //"https://www.ngkntk.com/fileadmin/_processed_/csm_NGK_Laser_Iridium_Packaging_01_386x260_6d9e0f3e6a.png",
 //            categoryId: "1"
 //        ))
 //    }

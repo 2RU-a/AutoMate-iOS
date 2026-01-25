@@ -13,6 +13,3 @@ struct CategoryChipsView: View {
     }
 }
 
-#Preview {
-    CategoryChipsView()
-}

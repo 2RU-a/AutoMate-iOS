@@ -58,7 +58,7 @@ struct OfferCard: View {
     }
 }
 
-#Preview {
-    OfferCard(offer: Offer(id: "1", title: "საბურავები", subtitle: "ზამთრის აქცია", colorCode: "blue"))
-        .padding()
-}
+//#Preview {
+//    OfferCard(offer: Offer(id: "1", title: "საბურავები", subtitle: "ზამთრის აქცია", colorCode: "blue"))
+//        .padding()
+//}

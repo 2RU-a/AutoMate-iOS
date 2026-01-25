@@ -40,7 +40,7 @@ struct AddNewCarCard: View {
     }
 }
 
-#Preview {
-    AddNewCarCard()
-        .padding()
-}
+//#Preview {
+//    AddNewCarCard()
+//        .padding()
+//}
