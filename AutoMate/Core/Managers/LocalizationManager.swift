@@ -88,7 +88,29 @@ class LocalizationManager: ObservableObject {
         "QR კოდი": ["ka": "QR კოდი", "en": "QR Code"],
 
         // Favorites Keys
-        "No favorites": ["ka": "შენახული პროდუქტები არ მოიძებნა", "en": "No saved items yet"]
+        "No favorites": ["ka": "შენახული პროდუქტები არ მოიძებნა", "en": "No saved items yet"],
+        
+        "history_empty": ["ka": "ისტორია ცარიელია", "en": "History is empty"],
+        "history_empty_desc": ["ka": "თქვენ ჯერ არ გაქვთ დასრულებული სერვისები.", "en": "You have no completed services yet."],
+        "mileage": ["ka": "გარბენი", "en": "Mileage"],
+        "km": ["ka": "კმ", "en": "km"],
+        
+        "service_details": ["ka": "სერვისის დეტალები", "en": "Service Details"],
+        "service_type": ["ka": "სერვისის ტიპი", "en": "Service Type"],
+        "select": ["ka": "აირჩიეთ", "en": "Select"],
+        "current_mileage_km": ["ka": "მიმდინარე გარბენი (კმ)", "en": "Current Mileage (km)"],
+        "date": ["ka": "თარიღი", "en": "Date"],
+        "additional_note": ["ka": "დამატებითი შენიშვნა", "en": "Additional Note"],
+        "note_placeholder": ["ka": "მაგ: რა უნდა გაითვალისწინოს ხელოსანმა", "en": "e.g. what the mechanic should know"],
+        "add_service_title": ["ka": "სერვისის დამატება", "en": "Add Service"],
+        "oil_change": ["ka": "ძრავის ზეთის შეცვლა", "en": "Engine Oil Change"],
+        "belt_change": ["ka": "ძრავის ღვედის შეცვლა", "en": "Timing Belt Change"],
+        "brake_pads": ["ka": "სამუხრუჭე ხუნდების შეცვლა", "en": "Brake Pads Replacement"],
+        "brake_fluid": ["ka": "სამუხრუჭე სითხის შეცვლა", "en": "Brake Fluid Change"],
+        "tech_inspection": ["ka": "ტექ. დათვალიერება", "en": "Technical Inspection"],
+        "air_filter": ["ka": "ჰაერის ფილტრის შეცვლა", "en": "Air Filter Replacement"],
+        "tire_change": ["ka": "საბურავების შეცვლა", "en": "Tire Change"],
+        "suspension_repair": ["ka": "სავალი ნაწილის შეკეთება", "en": "Suspension Repair"]
     ]
     
     func t(_ key: String) -> String {

@@ -9,8 +9,7 @@ import SwiftUI
 
 struct ProductDetailView: View {
     let product: Product
-    
-    // 1. დავაკავშიროთ CartManager-თან
+    @StateObject private var lang = LocalizationManager.shared
     @StateObject private var cartManager = CartManager.shared
     
     var body: some View {

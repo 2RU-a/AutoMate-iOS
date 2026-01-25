@@ -7,73 +7,72 @@
 
 import SwiftUI
 
+import SwiftUI
+
 struct AddServiceView: View {
-    let carId: String
+    let car: MyCar // String carId-ს ნაცვლად ვიღებთ მთლიან მანქანას
     @Environment(\.dismiss) var dismiss
     @StateObject private var vehicleManager = VehicleManager.shared
-    
+    @StateObject private var lang = LocalizationManager.shared // 👈 თარგმანისთვის
 
     @State private var title = ""
     @State private var date = Date()
-    @State private var mileage = "" // გარბენისთვის (String-ად ვიღებთ TextInput-ისთვის)
+    @State private var mileage = ""
     @State private var adminNote = ""
     
     let serviceTypes = [
-        "ძრავის ზეთის შეცვლა",
-        "ძრავის ღვედის შეცვლა",
-        "სამუხრუჭე ხუნდების შეცვლა",
-        "სამუხრუჭე სითხის შეცვლა",
-        "ტექ. დათვალიერება",
-        "ჰაერის ფილტრის შეცვლა",
-        "საბურავების შეცვლა",
-        "სავალი ნაწილის შეკეთება"
+        "oil_change",           // "ძრავის ზეთის შეცვლა"
+        "belt_change",          // "ძრავის ღვედის შეცვლა"
+        "brake_pads",           // "სამუხრუჭე ხუნდების შეცვლა"
+        "brake_fluid",          // "სამუხრუჭე სითხის შეცვლა"
+        "tech_inspection",       // "ტექ. დათვალიერება"
+        "air_filter",           // "ჰაერის ფილტრის შეცვლა"
+        "tire_change",          // "საბურავების შეცვლა"
+        "suspension_repair"     // "სავალი ნაწილის შეკეთება"
     ]
 
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("სერვისის დეტალები")) {
-                    Picker("სერვისის ტიპი", selection: $title) {
-                        Text("აირჩიეთ").tag("")
+                Section(header: Text(lang.t("service_details"))) {
+                    Picker(lang.t("service_type"), selection: $title) {
+                        Text(lang.t("select")).tag("")
                         ForEach(serviceTypes, id: \.self) { type in
-                            Text(type).tag(type)
+                            Text(lang.t(type)).tag(lang.t(type)) // ვინახავთ ნათარგმნ სახელს
                         }
                     }
                     
-                    // გარბენის ველი
-                    TextField("მიმდინარე გარბენი (კმ)", text: $mileage)
+                    TextField(lang.t("current_mileage_km"), text: $mileage)
                         .keyboardType(.numberPad)
                     
-                    DatePicker("თარიღი", selection: $date, in: Date()..., displayedComponents: .date)
+                    DatePicker(lang.t("date"), selection: $date, in: Date()..., displayedComponents: .date)
                 }
                 
-                Section(header: Text("დამატებითი შენიშვნა")) {
-    
-                    TextField("მაგ: რა უნდა გაითვალისწინოს ხელოსანმა და ა.შ.", text: $adminNote, axis: .vertical)
+                Section(header: Text(lang.t("additional_note"))) {
+                    TextField(lang.t("note_placeholder"), text: $adminNote, axis: .vertical)
                         .lineLimit(4...10)
                 }
                 
                 Section {
                     Button(action: saveService) {
-                        Text("დაჯავშნა")
+                        Text(lang.t("Book Service"))
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
                     }
                     .disabled(title.isEmpty)
                 }
             }
-            .navigationTitle("სერვისის დამატება")
+            .navigationTitle(lang.t("add_service_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("გაუქმება") { dismiss() }
+                    Button(lang.t("cancel")) { dismiss() }
                 }
             }
         }
     }
     
     private func saveService() {
-        // გარბენის String-დან Int-ში გადაყვანა
         let mileageInt = Int(mileage)
         
         let newService = ServiceRecord(
@@ -81,15 +80,11 @@ struct AddServiceView: View {
             date: date,
             mileage: mileageInt,
             isCompleted: false,
-            note: adminNote
+            note: adminNote,
+            carName: "" // ეს VehicleManager-ში შეივსება
         )
         
-        vehicleManager.addService(to: carId, service: newService)
+        vehicleManager.addService(to: car, service: newService)
         dismiss()
     }
 }
-
-
-//#Preview {
-//    AddServiceView(carId: "test_car_123")
-//}

@@ -39,27 +39,25 @@ struct MyCarView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if authManager.isAnonymous {
-                    GuestPlaceholderView(
-                        title: lang.t("garage_title"), // "თქვენი ავტო-ფარეხი"
-                        message: lang.t("garage_guest_message") // "მანქანების დასამატებლად..."
-                    )
-                } else {
-                    mainDashboardContent
-                }
+        Group {
+            if authManager.isAnonymous {
+                GuestPlaceholderView(
+                    title: lang.t("garage_title"), // "თქვენი ავტო-ფარეხი"
+                    message: lang.t("garage_guest_message") // "მანქანების დასამატებლად..."
+                )
+            } else {
+                mainDashboardContent
             }
-            .navigationTitle(lang.t("My car")) // "ჩემი ავტომობილი"
-            .background(Color(.systemGroupedBackground))
-            .onAppear {
-                if selectedCarID == nil {
-                    selectedCarID = vehicleManager.cars.first?.id
-                }
+        }
+        .navigationTitle(lang.t("My car")) // "ჩემი ავტომობილი"
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            if selectedCarID == nil {
+                selectedCarID = vehicleManager.cars.first?.id
             }
-            .sheet(isPresented: $showAddCar) {
-                AddCarView(carToEdit: nil)
-            }
+        }
+        .sheet(isPresented: $showAddCar) {
+            AddCarView(carToEdit: nil)
         }
     }
     
@@ -163,8 +161,8 @@ struct MyCarView: View {
             }
         }
         .sheet(isPresented: $showAddService) {
-            if let carId = selectedCarID, carId != "add_new_car_placeholder" {
-                AddServiceView(carId: carId)
+            if let carId = selectedCarID, let selectedCar = vehicleManager.cars.first(where: { $0.id == carId }) {
+                AddServiceView(car: selectedCar) // 👈 carId-ს ნაცვლად გადაეცით selectedCar
             }
         }
     }

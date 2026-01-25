@@ -158,14 +158,16 @@ class VehicleManager: ObservableObject {
         listeners[carId] = listener
     }
     
-    func addService(to carId: String, service: ServiceRecord) {
-        guard let userId = Auth.auth().currentUser?.uid else { return }
+    func addService(to car: MyCar, service: ServiceRecord) { // carId-ს ნაცვლად მთლიანი car გადაეცემა
+        guard let userId = Auth.auth().currentUser?.uid, let carId = car.id else { return }
+        
+        var newService = service
+        newService.carName = "\(car.make) \(car.model)"
         
         do {
-            // სწორი გზა: users -> UID -> cars -> carId -> services
             _ = try db.collection("users").document(userId)
                 .collection("cars").document(carId)
-                .collection("services").addDocument(from: service)
+                .collection("services").addDocument(from: newService)
         } catch {
             print("DEBUG: Error adding service: \(error.localizedDescription)")
         }

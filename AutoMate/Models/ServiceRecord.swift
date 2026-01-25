@@ -16,4 +16,5 @@ struct ServiceRecord: Identifiable, Codable {
     var isCompleted: Bool    // ჩატარებულია თუ დაგეგმილი
     var note: String?        // დამატებითი შენიშვნა
     var cost: Double?
+    var carName: String?
 }
