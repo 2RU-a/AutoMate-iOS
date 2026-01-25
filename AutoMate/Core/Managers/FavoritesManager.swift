@@ -36,6 +36,14 @@ class FavoritesManager: ObservableObject {
         }
     }
     
+    func clearAll() {
+            // 1. ვასუფთავებთ ლოკალურ მასივს (UI განახლდება)
+            self.favoriteProducts = []
+            // 2. ვშლით ჩანაწერს ტელეფონის მეხსიერებიდან
+            UserDefaults.standard.removeObject(forKey: favoritesKey)
+            print("DEBUG: ფავორიტები გასუფთავდა.")
+        }
+    
     // MARK: - Persistence
     private func saveFavorites() {
         if let encoded = try? JSONEncoder().encode(favoriteProducts) {

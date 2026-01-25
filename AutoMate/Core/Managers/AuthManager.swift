@@ -132,15 +132,18 @@ class AuthManager: ObservableObject {
             DispatchQueue.main.async {
                 self.userSession = nil
                 self.updateUserInfo()
+                
                 // მონაცემების გასუფთავება
                 CartManager.shared.items = []
                 AddressManager.shared.addresses = []
+                
+                //რომ ფავორიტებიც წაიშალოს
+                FavoritesManager.shared.clearAll()
             }
         } catch {
             print("DEBUG: Error signing out - \(error.localizedDescription)")
         }
     }
-    
     func updateUserEmail(newEmail: String, password: String, completion: @escaping (Bool, String?) -> Void) {
         guard let user = Auth.auth().currentUser, let currentEmail = user.email else { return }
         let credential = EmailAuthProvider.credential(withEmail: currentEmail, password: password)
