@@ -14,6 +14,7 @@ struct ProfileView: View {
     
     @State private var showEmailEdit = false
     @State private var showPrivacyPolicy = false
+    @State private var showLogoutAlert = false
     
     var body: some View {
         NavigationStack {
@@ -102,12 +103,26 @@ struct ProfileView: View {
 
                 // 6. გასვლა
                 Section {
-                    Button(role: authManager.isAnonymous ? .none : .destructive, action: { authManager.signOut() }) {
+                    Button(role: authManager.isAnonymous ? .none : .destructive, action: {
+                        if authManager.isAnonymous {
+                            authManager.signOut()
+                        } else {
+                            showLogoutAlert = true // დალოგინებულისთვის ამოაგდოს Alert
+                        }
+                    }) {
                         Label(
                             authManager.isAnonymous ? "შესვლა / რეგისტრაცია" : "გასვლა",
                             systemImage: authManager.isAnonymous ? "arrow.left.circle" : "arrow.right.circle"
                         )
                     }
+                }
+                .alert("ნამდვილად გსურთ გასვლა?", isPresented: $showLogoutAlert) {
+                    Button("გასვლა", role: .destructive) {
+                        authManager.signOut()
+                    }
+                    Button("გაუქმება", role: .cancel) { }
+                } message: {
+                    Text("")
                 }
             }
             .navigationTitle("პროფილი")
