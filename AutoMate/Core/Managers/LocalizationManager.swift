@@ -110,7 +110,25 @@ class LocalizationManager: ObservableObject {
         "tech_inspection": ["ka": "ტექ. დათვალიერება", "en": "Technical Inspection"],
         "air_filter": ["ka": "ჰაერის ფილტრის შეცვლა", "en": "Air Filter Replacement"],
         "tire_change": ["ka": "საბურავების შეცვლა", "en": "Tire Change"],
-        "suspension_repair": ["ka": "სავალი ნაწილის შეკეთება", "en": "Suspension Repair"]
+        "suspension_repair": ["ka": "სავალი ნაწილის შეკეთება", "en": "Suspension Repair"],
+        
+        "your_auto_assistant": ["ka": "თქვენი ავტო-ასისტენტი", "en": "Your Auto-Assistant"],
+        "email": ["ka": "ელ-ფოსტა", "en": "Email"],
+        "password": ["ka": "პაროლი", "en": "Password"],
+        "loading": ["ka": "იტვირთება...", "en": "Loading..."],
+        "login_btn": ["ka": "შესვლა", "en": "Login"],
+        "or": ["ka": "ან", "en": "OR"],
+        "sign_in_google": ["ka": "Google-ით შესვლა", "en": "Sign in with Google"],
+        "sign_in_phone": ["ka": "ტელეფონის ნომრით შესვლა", "en": "Sign in with Phone"],
+        "sign_in_anonymous": ["ka": "ანონიმურად შესვლა", "en": "Sign in Anonymously"],
+        "registration": ["ka": "რეგისტრაცია", "en": "Registration"],
+        
+        "enter_phone_number": ["ka": "შეიყვანეთ ტელეფონის ნომერი", "en": "Enter Phone Number"],
+        "enter_sms_code": ["ka": "შეიყვანეთ SMS კოდი", "en": "Enter SMS Code"],        
+        "sms_sent_to": ["ka": "კოდი გაიგზავნა ნომერზე:", "en": "Code sent to:"],
+        "phone_hint": ["ka": "შეიყვანეთ ნომერი საერთაშორისო ფორმატში", "en": "Enter number in international format"],
+        "verify": ["ka": "დადასტურება", "en": "Verify"],
+        "send_code": ["ka": "კოდის გაგზავნა", "en": "Send Code"]
     ]
     
     func t(_ key: String) -> String {

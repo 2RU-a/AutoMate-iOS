@@ -5,11 +5,13 @@
 //  Created by oto rurua on 12.01.26.
 //
 
+
 import Foundation
 import SwiftUI
 
 struct LoginView: View {
     @StateObject private var authManager = AuthManager.shared
+    @StateObject private var lang = LocalizationManager.shared
     @State private var email = ""
     @State private var password = ""
     
@@ -26,7 +28,7 @@ struct LoginView: View {
                         .font(.largeTitle)
                         .fontWeight(.black)
                     
-                    Text("თქვენი ავტო-ასისტენტი")
+                    Text(lang.t("your_auto_assistant")) // "თქვენი ავტო-ასისტენტი"
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -34,7 +36,7 @@ struct LoginView: View {
                 
                 // Email/Password ველები
                 VStack(spacing: 15) {
-                    TextField("ელ-ფოსტა", text: $email)
+                    TextField(lang.t("email"), text: $email) // "ელ-ფოსტა"
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
@@ -42,7 +44,7 @@ struct LoginView: View {
                         .autocorrectionDisabled(true)
                         .keyboardType(.emailAddress)
                     
-                    SecureField("პაროლი", text: $password)
+                    SecureField(lang.t("password"), text: $password) // "პაროლი"
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
@@ -62,12 +64,11 @@ struct LoginView: View {
                 } label: {
                     HStack {
                         if authManager.isLoading {
-                            //აქ ვიძახებთ შენს შექმნილ UIKit კომპონენტს
                             UIKitLoadingIndicator(isAnimating: true, style: .medium)
                                 .padding(.trailing, 5)
                         }
                         
-                        Text(authManager.isLoading ? "იტვირთება..." : "შესვლა")
+                        Text(authManager.isLoading ? lang.t("loading") : lang.t("login_btn"))
                             .fontWeight(.bold)
                     }
                     .foregroundColor(.white)
@@ -76,33 +77,58 @@ struct LoginView: View {
                     .background(email.isEmpty || password.isEmpty ? Color.gray : Color.blue)
                     .cornerRadius(12)
                 }
-                .disabled(authManager.isLoading || email.isEmpty || password.isEmpty) // პროცესის დროს ღილაკი გაითიშოს
+                .disabled(authManager.isLoading || email.isEmpty || password.isEmpty)
                 
                 // "ან" გამყოფი
                 HStack {
                     Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                    Text("ან").font(.caption).foregroundColor(.gray)
+                    Text(lang.t("or")).font(.caption).foregroundColor(.gray) // "ან"
                     Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
                 }
                 .padding(.horizontal)
                 
                 VStack(spacing: 12) {
-                    socialLoginButton(icon: "google_logo", title: "Google-ით შესვლა", color: .clear)
+                    // Google Login Button - დაკავშირებული ლოგიკასთან
+                    Button(action: {
+                        authManager.signInWithGoogle { success, error in
+                            if success {
+                                print("Google Login Success")
+                            } else {
+                                print("Google Login Error: \(error ?? "")")
+                            }
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "g.circle.fill")
+                            Text(lang.t("sign_in_google")) // "Google-ით შესვლა"
+                        }
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                    }
                     
-                    Button(action: { /* Phone Auth Logic */ }) {
-                        Label("ტელეფონის ნომრით შესვლა", systemImage: "phone.fill")
-                            .fontWeight(.medium)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green.opacity(0.1))
-                            .foregroundColor(.green)
-                            .cornerRadius(12)
+                    NavigationLink(destination: PhoneLoginView()) {
+                        HStack {
+                            Image(systemName: "phone.fill")
+                            Text(lang.t("sign_in_phone")) // "ტელეფონის ნომრით შესვლა"
+                        }
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green.opacity(0.1))
+                        .foregroundColor(.green)
+                        .cornerRadius(12)
                     }
                     
                     Button(action: {
                         authManager.signInAnonymously()
                     }) {
-                        Label("ანონიმურად შესვლა", systemImage: "person.badge.shield.exclamation.fill")
+                        Label(lang.t("sign_in_anonymous"), systemImage: "person.badge.shield.exclamation.fill") // "ანონიმურად შესვლა"
                             .fontWeight(.medium)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -112,7 +138,7 @@ struct LoginView: View {
                     }
 
                     NavigationLink(destination: RegistrationView()) {
-                        Label("რეგისტრაცია", systemImage: "person.badge.plus")
+                        Label(lang.t("registration"), systemImage: "person.badge.plus") // "რეგისტრაცია"
                             .fontWeight(.medium)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -126,24 +152,6 @@ struct LoginView: View {
                 Spacer()
             }
             .padding()
-        }
-    }
-    
-    // დამხმარე კომპონენტი სოციალური ღილაკებისთვის
-    private func socialLoginButton(icon: String, title: String, color: Color) -> some View {
-        Button(action: { /* Google login logic */ }) {
-            HStack {
-                Image(systemName: "g.circle.fill") // დროებითი ხატულა
-                Text(title)
-            }
-            .fontWeight(.medium)
-            .foregroundColor(.primary)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-            )
         }
     }
 }
