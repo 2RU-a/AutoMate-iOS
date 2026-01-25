@@ -28,7 +28,6 @@ struct ServiceHistoryView: View {
                                 Text(service.title)
                                     .fontWeight(.bold)
                                 
-                                // 👇 გამოვაჩენთ მანქანის სახელს
                                 if let carName = service.carName {
                                     Text(carName)
                                         .font(.caption)
@@ -42,7 +41,7 @@ struct ServiceHistoryView: View {
                         }
                         
                         if let mileage = service.mileage {
-                            Text("\(lang.t("mileage")): \(mileage) \(lang.t("km"))") // "გარბენი: ... კმ"
+                            Text("\(lang.t("mileage")): \(mileage) \(lang.t("km"))")
                                 .font(.subheadline)
                         }
                         

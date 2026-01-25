@@ -24,7 +24,7 @@ struct CategoryItemView: View {
             }
             
             // კატეგორიის დასახელება
-            Text(category.name)
+            Text(category.displayName)
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundColor(.primary)

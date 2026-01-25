@@ -11,9 +11,11 @@
 		BA53A8012F13169D00FA871E /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = BA53A8002F13169D00FA871E /* FirebaseFirestore */; };
 		BA61D2022F268552003BBC63 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = BA61D2012F268552003BBC63 /* GoogleSignIn */; };
 		BA61D2042F268552003BBC63 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = BA61D2032F268552003BBC63 /* GoogleSignInSwift */; };
+		BA61D20B2F26AC07003BBC63 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BA61D20A2F26AC02003BBC63 /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BA61D20A2F26AC02003BBC63 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		BAC857682F118498009B343B /* AutoMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -76,6 +78,7 @@
 		BAC8575F2F118498009B343B = {
 			isa = PBXGroup;
 			children = (
+				BA61D20A2F26AC02003BBC63 /* README.md */,
 				BA22A81E2F1323FD00DE74B3 /* Core */,
 				BA22A81D2F1323E800DE74B3 /* Resources */,
 				BA22A81C2F1323D400DE74B3 /* Models */,
@@ -169,6 +172,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA61D20B2F26AC07003BBC63 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,17 +9,13 @@ import Foundation
 
 struct Category: Identifiable, Codable {
     var id: String
-    let name: String
+    let name_ka: String
+    let name_en: String
     let iconName: String
     
+    // ეს თვისება ავტომატურად აირჩევს შესაბამის სახელს
     var displayName: String {
-        let currentLang = UserDefaults.standard.string(forKey: "selected_language") ?? "ka"
-        
-        // თუ ენა ინგლისურია, ვცდილობთ ვთარგმნოთ სახელი LocalizationManager-ის მეშვეობით
-        if currentLang == "en" {
-            return LocalizationManager.shared.t(self.name)
-        }
-        return self.name
+        return LocalizationManager.shared.selectedLanguage == "ka" ? name_ka : name_en
     }
 }
 

@@ -13,55 +13,83 @@ import FirebaseFirestore
 @MainActor
 class HomeViewModel: ObservableObject {
     
+    // MARK: - Published Properties
     @Published var offers: [Offer] = []
     @Published var categories: [Category] = []
     @Published var hotDeals: [Product] = []
     @Published var isLoading: Bool = false
     
-    private let service: HomeServiceProtocol
+    // MARK: - Private Properties
     private let db = Firestore.firestore()
     
-    init(service: HomeServiceProtocol? = nil) {
-        self.service = service ?? MockHomeService()
+    // MARK: - Initialization
+    init() {
+        // აღარ ვიყენებთ HomeServiceProtocol-ს და MockHomeService-ს
     }
     
+    // MARK: - Data Loading
     func loadData() async {
-        isLoading = true
-        
-        do {
-            // 1. პარალელურად წამოვიღოთ Offers და Categories (Mock)
-            async let offersTask = service.fetchOffers()
-            async let categoriesTask = service.fetchCategories()
-            
-            // 2. Firebase-იდან მხოლოდ "ცხელი შეთავაზებების" წამოღება
-            let deals = await fetchHotDealsFromFirebase()
-            
-            // 3. მონაცემების მინიჭება
-            self.offers = try await offersTask
-            self.categories = try await categoriesTask
-            self.hotDeals = deals
-            
-        } catch {
-            print("ჩატვირთვის შეცდომა: \(error)")
+        // თუ მონაცემები უკვე გვაქვს, isLoading-ს აღარ ვრთავთ რადიკალურად,
+        // რომ მომხმარებელს ეკრანი არ "აუციმციმდეს"
+        if offers.isEmpty && categories.isEmpty {
+            isLoading = true
         }
         
-        isLoading = false
+        // ვიყენებთ Structured Concurrency-ს პარალელური ჩატვირთვისთვის
+        async let fetchedOffers = fetchOffersFromFirebase()
+        async let fetchedCategories = fetchCategoriesFromFirebase()
+        async let fetchedHotDeals = fetchHotDealsFromFirebase()
+        
+        // ველოდებით ყველა დავალების დასრულებას
+        let (o, c, d) = await (fetchedOffers, fetchedCategories, fetchedHotDeals)
+        
+        self.offers = o
+        self.categories = c
+        self.hotDeals = d
+        
+        self.isLoading = false
     }
     
-    // განახლებული ფუნქცია სპეციალური ფილტრით
+    // MARK: - Firebase Fetchers
+    
+    /// წამოიღებს სლაიდერის შეთავაზებებს
+    private func fetchOffersFromFirebase() async -> [Offer] {
+        do {
+            let snapshot = try await db.collection("offers").getDocuments()
+            return snapshot.documents.compactMap { document -> Offer? in
+                try? document.data(as: Offer.self)
+            }
+        } catch {
+            print("DEBUG: Error fetching offers: \(error.localizedDescription)")
+            return []
+        }
+    }
+    
+    /// წამოიღებს კატეგორიებს (ძრავი, ზეთები და ა.შ.)
+    private func fetchCategoriesFromFirebase() async -> [Category] {
+        do {
+            let snapshot = try await db.collection("categories").getDocuments()
+            return snapshot.documents.compactMap { document -> Category? in
+                try? document.data(as: Category.self)
+            }
+        } catch {
+            print("DEBUG: Error fetching categories: \(error.localizedDescription)")
+            return []
+        }
+    }
+    
+    /// წამოიღებს მხოლოდ იმ პროდუქტებს, რომლებსაც isHotDeal = true აქვთ
     private func fetchHotDealsFromFirebase() async -> [Product] {
         do {
-            // მივმართავთ "products" კოლექციას და ვფილტრავთ isHotDeal ველის მიხედვით
             let snapshot = try await db.collection("products")
-                .whereField("isHotDeal", isEqualTo: true) // 👈 ფილტრი
+                .whereField("isHotDeal", isEqualTo: true)
                 .getDocuments()
             
-            let fetched = snapshot.documents.compactMap { document -> Product? in
+            return snapshot.documents.compactMap { document -> Product? in
                 try? document.data(as: Product.self)
             }
-            return fetched
         } catch {
-            print("Hot Deals-ის წამოღება ვერ მოხერხდა: \(error)")
+            print("DEBUG: Error fetching hot deals: \(error.localizedDescription)")
             return []
         }
     }

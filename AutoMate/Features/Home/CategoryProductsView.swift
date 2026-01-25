@@ -58,7 +58,7 @@ struct CategoryProductsView: View {
                 }
             }
         }
-        .navigationTitle(category.name)
+        .navigationTitle(category.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemGroupedBackground))
         .toolbar {
@@ -73,7 +73,7 @@ struct CategoryProductsView: View {
         }
         .sheet(isPresented: $showFilters) {
             FilterView(options: $filterOptions,
-                       categoryName: category.name,
+                       categoryName: category.displayName,
                        categoryId: category.id)
         }
         .task {
@@ -87,7 +87,7 @@ struct CategoryProductsView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.gray)
-            TextField("მოძებნე \(category.name)...", text: $searchText)
+            TextField("მოძებნე \(category.displayName)...", text: $searchText)
                 .autocorrectionDisabled()
         }
         .padding(10)

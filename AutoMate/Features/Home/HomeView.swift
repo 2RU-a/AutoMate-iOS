@@ -5,6 +5,7 @@
 //  Created by oto rurua on 12.01.26.
 //
 
+
 import SwiftUI
 
 struct HomeView: View {
@@ -34,15 +35,18 @@ struct HomeView: View {
                     mainHomeContent
                 }
             }
+            .refreshable {
+                // საშუალებას აძლევს იუზერს ჩამოწიოს გვერდი და განაახლოს მონაცემები
+                await viewModel.loadData()
+            }
         }
         .background(Color(.systemBackground))
         .sheet(item: $selectedOffer) { offer in
             OfferDetailSheet(offer: offer)
         }
         .task {
-            if viewModel.categories.isEmpty {
-                await viewModel.loadData()
-            }
+            // მონაცემების პირველადი ჩატვირთვა
+            await viewModel.loadData()
         }
     }
     
@@ -133,12 +137,13 @@ struct HomeView: View {
                 .font(.headline)
                 .padding(.horizontal)
             
-            if viewModel.isLoading {
+            if viewModel.isLoading && viewModel.categories.isEmpty {
                 ProgressView().frame(maxWidth: .infinity)
             } else {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(viewModel.categories) { category in
                         NavigationLink(destination: CategoryProductsView(category: category)) {
+                            // ვიყენებთ CategoryItemView-ს, რომელიც შიგნით displayName-ს იყენებს
                             CategoryItemView(category: category)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -155,7 +160,7 @@ struct HomeView: View {
                 .font(.headline)
                 .padding(.horizontal)
             
-            if viewModel.isLoading {
+            if viewModel.isLoading && viewModel.hotDeals.isEmpty {
                 ProgressView().frame(maxWidth: .infinity)
             } else if viewModel.hotDeals.isEmpty {
                 emptyStateView
@@ -185,7 +190,7 @@ struct HomeView: View {
         .padding(.vertical, 50)
     }
     
-    // MARK: - Offer Detail Sheet (დაამატე ფაილის ბოლოში)
+    // MARK: - Offer Detail Sheet
     struct OfferDetailSheet: View {
         let offer: Offer
         @Environment(\.dismiss) var dismiss
