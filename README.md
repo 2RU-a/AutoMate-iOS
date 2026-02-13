@@ -1,3 +1,11 @@
+<img width="1206" height="2622" alt="Authentication" src="https://github.com/user-attachments/assets/acf1ae6c-1580-446d-a62c-a79dbc23c695" />
+<img width="1206" height="2622" alt="Profile" src="https://github.com/user-attachments/assets/f1d165b1-3a8d-4b5a-af21-8a5080868e87" />
+<img width="1206" height="2622" alt="Shopping Cart" src="https://github.com/user-attachments/assets/999ee6dd-2733-41f2-99c3-d64b4e271c70" />
+<img width="1206" height="2622" alt="Booking:Appointment" src="https://github.com/user-attachments/assets/5e1c0ac5-d762-41bf-8d1a-73457d882363" />
+<img width="1206" height="2622" alt="Favorites" src="https://github.com/user-attachments/assets/0f8a5fb1-ff06-47c6-9fd7-6bad5c1496f3" />
+<img width="1206" height="2622" alt="Home:Main" src="https://github.com/user-attachments/assets/be04d379-fc38-4845-9523-ebbb450960ac" />
+
+
 # AutoMate-iOS
 AutoService and Store app
 
